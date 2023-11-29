@@ -4,7 +4,7 @@
 
 Article Data Extractor
 This module provides functionalities for extracting specific information from Law Reviews Papers (PDF format).
-The module includes functions for parsing PDF files, processing the extracted data, organizing it into a structured format, and creating a tailor-made class objects for further data mininig.
+The module includes functions for parsing PDF files, processing the extracted data, organizing it into a structured format, and creating a tailor-made class object for further data mining.
 
 Features:
 - Load and parse PDF files.
@@ -71,8 +71,8 @@ class LRPaper:
         self.first_fn_text = first_fn_text
         self.last_fn_num = last_fn_num
         self.last_fn_text = last_fn_text
-        self.acknowledgement = acknowledgement
-        self.acknowledgement_length = acknowledgement_length
+        self.acknowledgment = acknowledgment
+        self.acknowledgment_length = acknowledgement_length
 
 
     def print_attributes(self):
@@ -92,5 +92,5 @@ class LRPaper:
 
 
 # Check the LRPaper class
-sample = LRPaper()
-sample.print_attributes()
+instance = LRPaper()
+instance.print_attributes()
