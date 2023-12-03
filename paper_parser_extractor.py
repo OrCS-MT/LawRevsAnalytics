@@ -22,7 +22,7 @@ The code is fully documented for ease of understanding and further modification.
 
 """
 
-## **Class *LRPaper***"""
+### **Class *LRPaper***
 
 class LRPaper:
     """
@@ -96,11 +96,9 @@ instance = LRPaper()
 instance.print_attributes()
 
 
-"""## **Functions**
+### **Functions**
 
-Function - Create (overwrite) Log File
-"""
-
+#Function - Create (overwrite) Log File
 def write_log_file(message, log_path):
     """
     Create a log file (and overwrite an existing one).
