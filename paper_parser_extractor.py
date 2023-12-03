@@ -94,3 +94,21 @@ class LRPaper:
 # Check the LRPaper class
 instance = LRPaper()
 instance.print_attributes()
+
+
+"""## **Functions**
+
+Function - Create (overwrite) Log File
+"""
+
+def write_log_file(message, log_path):
+    """
+    Create a log file (and overwrite an existing one).
+
+    Args:
+    - message (str): The first message to be logged.
+    - log_path (str): Path to the log file where the message will be logged.
+    """
+    with open(log_path, 'w', encoding='utf-8') as log_file:
+        now = datetime.datetime.now()
+        log_file.write(f"{now}: {message}")
