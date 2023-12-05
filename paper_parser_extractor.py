@@ -110,3 +110,17 @@ def write_log_file(message, log_path):
     with open(log_path, 'w', encoding='utf-8') as log_file:
         now = datetime.datetime.now()
         log_file.write(f"{now}: {message}")
+
+
+"""Function - Log Error"""
+def log_error(message, log_path):
+    """
+    Log an error message to the specified log file.
+
+    Args:
+    - message (str): The error message to be logged.
+    - log_path (str): Path to the log file where the error will be logged.
+    """
+    with open(log_path, 'a', encoding='utf-8') as log_file:
+        now = datetime.datetime.now()
+        log_file.write(f"{now}: {message}")
