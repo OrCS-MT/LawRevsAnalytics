@@ -33,7 +33,7 @@ class LRPaper:
                  vol_start_index = None, authors_title_text=None, title=None, authors=None, PDF=None, full_text=None, cite_line=None,
                  length_original=None, length_reorg=None, main_text=None,fns_text=None, main_text_length=None, fns_text_length=None,
                  total_fns=None,fns_words_ratio=None, main_fns_portions=None, length_problem_flag = True, start=None, mid=None, end=None, short_SME_flag = False, SME=None,
-                 first_fn_num=None, first_fn_text=None, last_fn_num=None, last_fn_text=None, acknowledgement=None, acknowledgement_length=None):
+                 first_fn_num=None, first_fn_text=None, last_fn_num=None, last_fn_text=None, acknowledgement=None, acknowledgement_length=None, reorg_acknowledgment=None):
         """
         Initialize an LRPaper object with the provided attributes.
         """
@@ -73,6 +73,7 @@ class LRPaper:
         self.last_fn_text = last_fn_text
         self.acknowledgment = acknowledgment
         self.acknowledgment_length = acknowledgement_length
+        self.reorg_acknowledgment = reorg_acknowledgment             
 
 
     def print_attributes(self):
