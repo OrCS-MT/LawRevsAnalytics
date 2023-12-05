@@ -112,7 +112,7 @@ def write_log_file(message, log_path):
         log_file.write(f"{now}: {message}")
 
 
-"""Function - Log Error"""
+#Function - Log Error
 def log_error(message, log_path):
     """
     Log an error message to the specified log file.
