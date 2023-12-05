@@ -32,9 +32,9 @@ class LRPaper:
     def __init__(self, doc_id=None, filename=None, doc_type=None, number_of_pages=None, journal=None, year=None, first_page=None, vol=None,
                  vol_start_index = None, authors_title_text=None, title=None, authors=None, PDF=None, full_text=None, cite_line=None,
                  length_original=None, length_reorg=None, main_text=None,fns_text=None, main_text_length=None, fns_text_length=None,
-                 total_fns=None,fns_words_ratio=None, main_fns_portions=None, length_problem_flag = True, start=None, mid=None, end=None, short_SME_flag = False, SME=None,
+                 total_fns=None,fns_words_ratio=None, main_fns_portions=None, general_length_problem_flag = True, start=None, mid=None, end=None, short_SME_flag = False, SME=None,
                  first_fn_num=None, first_fn_text=None, last_fn_num=None, last_fn_text=None, acknowledgement=None, 
-                 acknowledgement_length=None, reorg_acknowledgment=None, reorg_acknowledgment_length=None):
+                 acknowledgement_length=None, reorg_acknowledgment=None, reorg_acknowledgment_length=None, ACK_length_problem_flag=False):
         """
         Initialize an LRPaper object with the provided attributes.
         """
@@ -60,7 +60,7 @@ class LRPaper:
         self.total_fns = total_fns
         self.fns_words_ratio = fns_words_ratio
         self.main_fns_portions = main_fns_portions
-        self.length_problem_flag = length_problem_flag # initialized as TRUE to reflect a problem with the length of the text; when the text length is ok, change value to FALSE
+        self.general_length_problem_flag = length_problem_flag # initialized as TRUE to reflect a problem with the length of the text; when the text length is ok, change value to FALSE
         self.start = start
         self.mid = mid
         self.end = end
@@ -76,6 +76,7 @@ class LRPaper:
         self.acknowledgment_length = acknowledgement_length
         self.reorg_acknowledgment = reorg_acknowledgment             
         self.reorg_acknowledgment_length = reorg_acknowledgment_length
+        self.ACK_length_problem_flag = ACK_length_problem_flag                     
     
 
     def print_attributes(self):
