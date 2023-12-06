@@ -22,6 +22,17 @@ The code is fully documented for ease of understanding and further modification.
 
 """
 
+### PIP, Imports
+import copy
+import os
+import time
+import string
+import datetime
+import re
+import sys
+
+
+
 ### **Class *LRPaper***
 
 class LRPaper:
@@ -128,3 +139,17 @@ def log_error(message, log_path):
     with open(log_path, 'a', encoding='utf-8') as log_file:
         now = datetime.datetime.now()
         log_file.write(f"{now}: {message}")
+
+#Function - Create Directory (if missing)
+def create_directory_if_not_exists(directory):
+    """
+    Create a directory at the specified path if it does not already exist.
+
+    Args:
+    directory (str): The path of the directory to be created.
+    """
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+        print(f"Created directory: {directory}")
+    else:
+        print(f"Directory already exists: {directory}")
