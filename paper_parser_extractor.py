@@ -263,4 +263,15 @@ def create_directory_if_not_exists(directory):
     else:
         print(f"Directory already exists: {directory}")
 
+#Function - Print a List of LRPaper Objects
+def print_LRPapers_list(papers):
+    """
+    Print all attributes for all LRPaper objects in a given list.
+
+    Args:
+    papers (list): A list of LRPaper objects.
+    """
+    for paper in papers:
+        paper.print_attributes()
+        print("\n")
 
