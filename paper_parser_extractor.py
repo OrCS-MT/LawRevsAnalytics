@@ -1,5 +1,4 @@
-"""paper_parser_extractor.py
-
+"""
 # **Module Description**
 
 Article Data Extractor
@@ -19,8 +18,9 @@ Note:
 This script is designed with best practices in Python programming, ensuring readability, maintainability, and efficient performance.
 The code is fully documented for ease of understanding and further modification.
 "
-
 """
+
+
 
 ### PIP, Imports
 import copy
@@ -30,6 +30,115 @@ import string
 import datetime
 import re
 import sys
+
+
+
+
+"""**Global Variables**"""
+
+law_reviews_names = {
+    'BuffLR': 'Buffalo Law Review',
+    'CaliLR': 'California Law Review',
+    'CWRLR': 'Case Western Reserve Law Review',
+    'CathULR': 'Catholic University Law Review',
+    'ChiKLR': 'Chicago-Kent Law Review',
+    'ClevSLR': 'Cleveland State Law Review',
+    'CorLR': 'Cornell Law Review',
+    'DePLR': 'DePaul Law Review',
+    'DiLR': 'Dickinson Law Review (Penn State)',
+    'FLRL': 'Florida Law Review',
+    'FordLR': 'Fordham Law Review',
+    'HastLJ': 'Hastings Law Journal',
+    'IndLJ': 'Indiana Law Journal',
+    'KentuLLJ': 'Kentucky Law Journal',
+    'LouisLR': 'Louisiana Law Review',
+    'MarqLR': 'Marquette Law Review',
+    'MichLR': 'Michigan Law Review',
+    'MinnLR': 'Minnesota Law Review',
+    'MissLR': 'Missouri Law Review',
+    'MontLR': 'Montana Law Review',
+    'NCarolLR': 'North Carolina Law Review',
+    'NDakoLR': 'North Dakota Law Review',
+    'NotDamLR': 'Notre Dame Law Review',
+    'SMULR': 'SMU Law Review',
+    'SCarolLR': 'South Carolina Law Review',
+    'SJohnLR': "St. John's Law Review",
+    'UChiLR': 'University of Chicago Law Review',
+    'UMiaLR': 'University of Miami Law Review',
+    'VandLR': 'Vanderbilt Law Review',
+    'WashLeeLR': 'Washington & Lee Law Review',
+    'WashLR': 'Washington Law Review'
+}
+
+law_reviews_IDs = {
+    'BuffLR': 101,
+    'CaliLR': 102,
+    'CWRLR': 103,
+    'CathULR': 104,
+    'ChiKLR': 105,
+    'ClevSLR': 106,
+    'CorLR': 107,
+    'DePLR': 108,
+    'DiLR': 109,
+    'FLRL': 110,
+    'FordLR': 111,
+    'HastLJ': 112,
+    'IndLJ': 113,
+    'KentuLLJ': 114,
+    'LouisLR': 115,
+    'MarqLR': 116,
+    'MichLR': 117,
+    'MinnLR': 118,
+    'MissLR': 119,
+    'MontLR': 120,
+    'NCarolLR': 121,
+    'NDakoLR': 122,
+    'NotDamLR': 123,
+    'SMULR': 124,
+    'SCarolLR': 125,
+    'SJohnLR': 126,
+    'UChiLR': 127,
+    'UMiaLR': 128,
+    'VandLR': 129,
+    'WashLeeLR': 130,
+    'WashLR': 131
+}
+
+# *** MAKE SURE TO ASSIGN VALUES TO 'unique_key' AND TO ALL DIRECTORIES
+unique_key = "BuffLR"
+LR_Name = law_reviews_names[unique_key]
+LR_ID = law_reviews_IDs[unique_key]
+delay = 30
+
+# Directory containing the PDFs
+pdf_dir = f"/content/drive/MyDrive/LRsPr{unique_key}/PDFs"
+# Directory containing TXT copies of the PDFs, with fulltext content
+fulltext_dir = f"/content/drive/MyDrive/LRsPr{unique_key}/Fulltexts"
+# Directory containing the main text and FNs text files of each paper (saved as two txt files, one with _M, the other _FN)
+main_fns_texts_dir = f"/content/drive/MyDrive/LRsPr{unique_key}/Main&FNs"
+# Directory containing the start/mid/end of each paper
+SME_dir = f"/content/drive/MyDrive/LRsPr{unique_key}/SMEText"
+# Directory containing the xlsx file with all paper objects
+XLSX_dir = f"/content/drive/MyDrive/LRsPr{unique_key}/XLSX"
+# Directory containing the xlsx file with all paper objects
+logs_dir = f"/content/drive/MyDrive/LRsPr{unique_key}/Logs"
+
+# Fixing paths for log files
+critical_errors_log_path = f"{logs_dir}/#CritLogPath.txt"
+pdf_to_txt_log_path = f"{logs_dir}/#PDFtoTXTLog.txt"
+txt_length_log_path = f"{logs_dir}/#TXTLengthog.txt"
+cite_log_path = f"{logs_dir}/#CiteLog.txt"
+yearvolpage_log_path = f"{logs_dir}/#YVPLog.txt"
+auth_title_text_log_path = f"{logs_dir}/#AuthtitleTextLog.txt"
+extract_authors_and_title_log_path = f"{logs_dir}/#ExtractAuthtitleLog.txt"
+valid_pdf_path_log_path = f"{logs_dir}/#ValidPdfPathLog.txt"
+main_fns_text_division_log_path = f"{logs_dir}/#Mainfns_textDivisionLog.txt"
+first_last_fns_log_path = f"{logs_dir}/#FirstLastFNsLog.txt"
+ACK_log_path = f"{logs_dir}/#ACKLog.txt"
+SME_log_path = f"{logs_dir}/#SMELog.txt"
+main_reorg_log_path = f"{logs_dir}/#MainReOrgLog.txt"
+XLSX_log_path = f"{logs_dir}/#XLSXLog.txt"
+
 
 
 
@@ -153,3 +262,5 @@ def create_directory_if_not_exists(directory):
         print(f"Created directory: {directory}")
     else:
         print(f"Directory already exists: {directory}")
+
+
