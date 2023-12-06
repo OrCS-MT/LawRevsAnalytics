@@ -198,7 +198,6 @@ class LRPaper:
         self.reorg_acknowledgment_length = reorg_acknowledgment_length
         self.ACK_length_problem_flag = ACK_length_problem_flag                     
     
-
     def print_attributes(self):
         """
         Print all attributes of the LRPaper instance.
@@ -206,7 +205,6 @@ class LRPaper:
         attributes = vars(self)  # 'vars' returns the __dict__ attribute of an object.
         for attribute, value in attributes.items():
             print(f"{attribute}: {value}")
-
 
     def to_dict(self):
         """
