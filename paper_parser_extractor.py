@@ -273,3 +273,17 @@ def print_LRPapers_list(papers):
         paper.print_attributes()
         print("\n")
 
+#Function - Print Bold
+def print_bold(text):
+    """
+    Print provided text in bold.
+
+    Args:
+    text (str): The text to be printed in bold.
+    """
+
+    # The ANSI escape code for bold text is '\033[1m'
+    # '\033[0m' resets the style back to normal
+    print('\033[1m' + text + '\033[0m')
+
+
