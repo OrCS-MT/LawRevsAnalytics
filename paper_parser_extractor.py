@@ -287,3 +287,36 @@ def print_bold(text):
     print('\033[1m' + text + '\033[0m')
 
 
+#Function - Clean Double-spaces, Leading/Trailing Spaces, Empty Lines
+def remove_edge_spaces(text):
+    """Remove leading and trailing spaces from the text."""
+    return text.strip()
+
+def remove_empty_lines(text):
+    """Remove empty lines from the text."""
+    return re.sub(r'\n\s*\n', '\n', text)
+
+def clean_line_spaces(text):
+    """Remove leading and trailing spaces from each line in the text."""
+    return '\n'.join([line.strip() for line in text.split('\n')])
+
+def reduce_spaces(text):
+    """Replace multiple spaces with a single space in the text."""
+    return re.sub(r' +', ' ', text)
+
+def clean_text(text):
+    """
+    Clean text by removing leading and trailing spaces, empty lines, and extra spaces within lines.
+
+    Args:
+    text (str): The text to be cleaned.
+
+    Returns:
+    str: The cleaned text.
+    """
+    text = remove_edge_spaces(text)
+    text = remove_empty_lines(text)
+    text = clean_line_spaces(text)
+    text = reduce_spaces(text)
+    return text
+
