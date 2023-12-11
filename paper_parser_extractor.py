@@ -23,6 +23,11 @@ The code is fully documented for ease of understanding and further modification.
 
 
 ### PIP, Imports
+pip install PyMuPDF pypdf2 pdfminer.six
+pip install numpy scipy
+pip install scikit-image Pillow
+pip install tqdm
+
 import copy
 import os
 import time
