@@ -320,3 +320,26 @@ def clean_text(text):
     text = reduce_spaces(text)
     return text
 
+#Function - Print the number of all files of specific format in a folder
+def count_specific_files(path, suffix):
+    """
+    Count the number of files with a given suffix in the given path.
+
+    Args:
+    path (str): Path of the folder to search in.
+    suffix (str): The desired file format to count, e.g., '.pdf'. The suffix should be lowercase.
+
+    Returns:
+    int: Number of files matching the suffix found. In case of an error, it prints a message and returns None.
+    """
+    file_count = 0
+    try:
+        for root, dirs, files in os.walk(path):
+            for file in files:
+                if file.lower().endswith(suffix):
+                    file_count += 1
+        return file_count
+
+    except Exception as e:
+        print(f"Error encountered in count_specific_files funtion: {e}")
+        return None
