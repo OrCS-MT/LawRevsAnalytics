@@ -343,3 +343,38 @@ def count_specific_files(path, suffix):
     except Exception as e:
         print(f"Error encountered in count_specific_files funtion: {e}")
         return None
+
+#Function - Save LRPapers Dictionary to XLSX
+def save_papers_to_xlsx(papers, save_path, output_name, log_path, chunk_size=10000):
+    """
+    Save a list of LRPaper objects to an XLSX file in chunks.
+
+    Args:
+    - papers (list): List of LRPaper objects.
+    - save_path (str): Directory path where the XLSX file will be saved.
+    - output_name (str): String to be included in the filename before the timestamp.
+    - log_path (str): Path to the log file where errors will be logged.
+    - chunk_size (int): Number of rows per chunk in the XLSX file.
+
+    Returns:
+    None: Prints the path to the saved file upon completion.
+    """
+
+    papers_dicts = convert_papers_to_dicts(papers, log_path)
+    df = pd.DataFrame(papers_dicts)
+
+    current_time = datetime.datetime.now().strftime('%d_%m_%Y_%H_%M')
+    file_path = f"{save_path}/{output_name}_{current_time}.xlsx"
+
+    # calculates the number of chunks (incl. if the last one has less than 10,000 items)
+    num_chunks = len(df) // chunk_size + (len(df) % chunk_size > 0)
+
+    with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
+        for i in range(num_chunks):
+            try:
+                df_chunk = df[i*chunk_size:(i+1)*chunk_size]
+                df_chunk.to_excel(writer, index=False, startrow=i*chunk_size)
+            except Exception as e:
+                log_error(f"Problem writing chunk {i+1} to XLSX. Error: {str(e)}\n", log_path)
+
+    print(f"Data saved to {file_path}")
