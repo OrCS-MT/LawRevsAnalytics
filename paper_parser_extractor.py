@@ -396,3 +396,25 @@ def save_papers_to_xlsx(papers, save_path, output_name, log_path, chunk_size=100
                 log_error(f"Problem writing chunk {i+1} to XLSX. Error: {str(e)}\n", log_path)
 
     print(f"Data saved to {file_path}")
+
+
+#Function - Get a Number of PDF Pages
+def get_num_of_pages(pdf_path):
+    """
+    Determine the number of pages in a PDF file.
+
+    Args:
+    pdf_path (str): The file path of the PDF.
+
+    Returns:
+    int: The number of pages in the PDF. Returns None if the file cannot be read or is not a valid PDF.
+    """
+    try:
+        with open(pdf_path, 'rb') as file:
+            reader = PyPDF2.PdfReader(file)
+            return len(reader.pages)
+    except Exception as e:
+        print(f"Error in get_num_of_pages funtion: {e}\n Could not read the file {pdf_path}\n")
+        return None
+
+
