@@ -417,7 +417,7 @@ def get_num_of_pages(pdf_path):
         print(f"Error in get_num_of_pages funtion: {e}\n Could not read the file {pdf_path}\n")
         return None
 
-###Function - Count Words in title Page
+#Function - Count Words in title Page
 def count_words_in_title_page(pdf_path):
     """
     Count the number of words on the first page (title page) of a PDF file.
