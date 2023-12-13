@@ -417,4 +417,26 @@ def get_num_of_pages(pdf_path):
         print(f"Error in get_num_of_pages funtion: {e}\n Could not read the file {pdf_path}\n")
         return None
 
+###Function - Count Words in title Page
+def count_words_in_title_page(pdf_path):
+    """
+    Count the number of words on the first page (title page) of a PDF file.
+
+    Args:
+    pdf_path (str): The file path of the PDF.
+
+    Returns:
+    int: The number of words on the first page. Returns None if the text cannot be extracted or if there's an error.
+    """
+    try:
+        with open(pdf_path, 'rb') as file:
+            reader = PyPDF2.PdfReader(file)
+            first_page = reader.pages[0]
+            text = first_page.extract_text()
+            words = text.split()
+            return len(words)
+
+    except Exception as e:
+        print(f"Error in count_words_in_title_page funtion: {e}\n Could not read the file {pdf_path}\n")
+        return None
 
