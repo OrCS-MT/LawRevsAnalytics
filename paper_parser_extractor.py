@@ -440,3 +440,38 @@ def count_words_in_title_page(pdf_path):
         print(f"Error in count_words_in_title_page funtion: {e}\n Could not read the file {pdf_path}\n")
         return None
 
+#Function - Extract full text from PDF
+"""
+Input - PDF file
+Outupt - TXT file
+"""
+
+def extract_text_from_pdf(pdf_path, txt_path, pdf_to_txt_log_path):
+    """
+    Extract text from a PDF and save it to a text file.
+    This function runs in a separate process.
+
+    Args:
+    - pdf_path (str): The file path of the PDF.
+    - txt_path (str): The path where the extracted text should be saved.
+    - pdf_to_txt_log_path (str): Path to the log file for recording the process.
+
+    Returns:
+    str: "Success" if extraction is successful, None otherwise.
+    """
+    try:
+        # Extract text from PDF
+        text = extract_text(pdf_path)
+
+        # Save the extracted text to a text file
+        with open(txt_path, 'w', encoding='utf-8') as txt_file:
+            txt_file.write(text)
+
+        log_error("Successfully extracted text.\n\n", pdf_to_txt_log_path)
+        return "Success"
+
+    except Exception as e:
+        log_error(f"ERROR WITH TEXT EXTRACTION: {str(e)} \n for file: {pdf_path}\n\n", pdf_to_txt_log_path)
+        print(f"Error processing {pdf_path}: {str(e)}\n\n")
+        return None
+
