@@ -475,3 +475,26 @@ def extract_text_from_pdf(pdf_path, txt_path, pdf_to_txt_log_path):
         print(f"Error processing {pdf_path}: {str(e)}\n\n")
         return None
 
+
+def extract_text_from_pdf_with_timeout(pdf_path, txt_path, pdf_to_txt_log_path, timeout=30):
+    """
+    Attempt to extract text from a PDF file within a specified timeout.
+
+    Args:
+    - pdf_path (str): The file path of the PDF.
+    - txt_path (str): The path where the extracted text should be saved.
+    - pdf_to_txt_log_path (str): Path to the log file for recording the process.
+    - timeout (int): The maximum time in seconds to wait for the extraction process.
+
+    Returns:
+    None: The function does not return a value but logs the outcome.
+    """
+    proc = multiprocessing.Process(target=extract_text_from_pdf, args=(pdf_path, txt_path, pdf_to_txt_log_path))
+    proc.start()
+    proc.join(timeout)
+
+    if proc.is_alive():
+        proc.terminate()
+        proc.join()
+        log_error(f"TIMEOUT ERROR: Failed to process {pdf_path} within {timeout} seconds\n\n.", pdf_to_txt_log_path)
+        print(f"Timeout error: Failed to process {pdf_path} within {timeout} seconds.\n\n")
