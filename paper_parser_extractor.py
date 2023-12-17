@@ -498,3 +498,33 @@ def extract_text_from_pdf_with_timeout(pdf_path, txt_path, pdf_to_txt_log_path, 
         proc.join()
         log_error(f"TIMEOUT ERROR: Failed to process {pdf_path} within {timeout} seconds\n\n.", pdf_to_txt_log_path)
         print(f"Timeout error: Failed to process {pdf_path} within {timeout} seconds.\n\n")
+
+#Function - Extract Word-length of a Paper (based on TXT file)
+def count_words_in_file(file_path, log_path):
+    """
+    Count the number of words in a text file.
+
+    Args:
+    file_path (str): The path to the text file.
+    log_path (str): Path to the log file for recording errors.
+
+    Returns:
+    int: The number of words in the file, or None if an error occurs.
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            file_content = file.read()
+            words = file_content.split()
+            return len(words)
+
+    except FileNotFoundError:
+        error_message = f"ERROR: Could not count words since the file {file_path} does not exist.\n\n"
+        print(error_message)
+        log_error(error_message, log_path)
+        return None
+
+    except Exception as e:
+        error_message = f"ERROR: Could not count words of {file_path}. The error: {str(e)}\n\n"
+        print(error_message)
+        log_error(error_message, log_path)
+        return None
