@@ -545,3 +545,46 @@ def count_words_in_string(text):
         return None
     else:
         return len(words)
+
+
+#Function - Extract citation info from TXT
+"""Input - TXT file
+Outupt - TXT file"""
+def extract_citation_line(paper, cite_log_path):
+    """
+    Extract a specific citation line from a text file and update the 'cite_line' attribute of the LRPaper object.
+
+    Args:
+    paper (LRPaper): The LRPaper object whose citation line is to be extracted.
+    cite_log_path (str): Path to the log file for recording the process.
+
+    Returns:
+    None: The function updates the LRPaper object and logs the outcome.
+    """
+    txt_path = paper.full_text
+    try:
+        with open(txt_path, 'r', encoding='utf-8') as txt_file:
+            lines = txt_file.readlines()
+            cite_start = next((i for i, line in enumerate(lines) if line.startswith("Recommended")), None)
+
+            # Adjust cite_start to skip repeated "Recommended" lines or empty lines
+            while cite_start is not None and (lines[cite_start].startswith("Recommended") or not lines[cite_start].strip()):
+                cite_start += 1
+
+            cite_end_pattern = re.compile(r'\(\d{4}\)')
+            cite_end = next((i for i, line in enumerate(lines) if cite_end_pattern.search(line)), None)
+
+            if cite_start is not None and cite_end is not None and cite_end >= cite_start:
+                citation_content = ''.join(lines[cite_start:cite_end+1])
+                citation_content = ' '.join(citation_content.split())   # Clean up the content
+                paper.cite_line = citation_content # Update the object's attribute
+                log_error(f"Successfully extracted citation for {txt_path}.\n\n", cite_log_path)
+            else:
+                raise ValueError("Citation pattern not found")
+
+    except Exception as e:
+        paper.cite_line = "***NO CITATION PATTERN WAS FOUND***"
+        log_error(f"ERROR: {str(e)} while processing {txt_path}.\n\n", cite_log_path)
+        print(f"ERROR while processing {txt_path}. \n The Error - {str(e)}\n\n")
+
+
