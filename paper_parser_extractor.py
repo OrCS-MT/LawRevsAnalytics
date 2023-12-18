@@ -528,3 +528,20 @@ def count_words_in_file(file_path, log_path):
         print(error_message)
         log_error(error_message, log_path)
         return None
+
+#Function - count words in a string variable
+def count_words_in_string(text):
+    """
+    Count the number of words in a given string.
+
+    Args:
+    text (str): The string to be analyzed.
+
+    Returns:
+    int: The number of words in the string.
+    """
+    words = text.split()
+    if len(words) == 0:
+        return None
+    else:
+        return len(words)
