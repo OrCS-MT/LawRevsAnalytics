@@ -588,3 +588,25 @@ def extract_citation_line(paper, cite_log_path):
         print(f"ERROR while processing {txt_path}. \n The Error - {str(e)}\n\n")
 
 
+#Function - Find year, First Page, and volume
+def extract_year_from_citation(citation_line):
+    """
+    Extract the year from a citation line (helper for extract_doc_id_YVP_from_cite_line).
+
+    Args:
+    citation_line (str): The citation line from which the year is to be extracted.
+
+    Returns:
+    year_num (int): The year extracted from the citation line as an integer.
+    doc_id_year (str): The year extracted from the citation line as a string,
+                       suitable for use in constructing a document ID.
+    """
+    year_pattern = re.compile(r'\((\d{4})\)')
+    year_match = year_pattern.search(citation_line)
+    if year_match:
+        year_num = int(year_match.group(1))
+        doc_id_year = year_match.group(1)  # String representation for the doc_id
+        return year_num, doc_id_year
+    else:
+        raise ValueError("Year not found in the citation. Thus, skipped also Volume and FirstPage.")
+
