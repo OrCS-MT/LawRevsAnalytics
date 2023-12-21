@@ -610,3 +610,21 @@ def extract_year_from_citation(citation_line):
     else:
         raise ValueError("Year not found in the citation. Thus, skipped also Volume and FirstPage.")
 
+
+def extract_first_page_from_citation(citation_line, year):
+    """
+    Extract the first page number from a citation line (helper for extract_doc_id_YVP_from_cite_line).
+
+    Args:
+    citation_line (str): The citation line from which the first page number is to be extracted.
+    year (int): The year of the publication to assist in locating the first page number.
+
+    Returns:
+    int: The first page number extracted from the citation line.
+    """
+    first_page_pattern = re.compile(r'(\d+)\s+\(' + re.escape(str(year)) + r'\)')
+    first_page_match = first_page_pattern.search(citation_line)
+    if first_page_match:
+        return int(first_page_match.group(1))
+    else:
+        raise ValueError("First page not found in the citation. Thus, skipped also Volume.")
