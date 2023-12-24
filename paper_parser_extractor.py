@@ -628,3 +628,27 @@ def extract_first_page_from_citation(citation_line, year):
         return int(first_page_match.group(1))
     else:
         raise ValueError("First page not found in the citation. Thus, skipped also Volume.")
+
+def extract_volume_from_citation(citation_line, first_page):
+    """
+    Extract the volume number and its start index from a citation line (helper for extract_doc_id_YVP_from_cite_line).
+
+    Args:
+    citation_line (str): The citation line from which the volume number is to be extracted.
+    first_page (int): The first page number to assist in locating the volume number.
+
+    Returns:
+    volume_num (int): The volume number as an integer.
+    doc_id_vol (str): The volume number as a string, padded to ensure three digits,
+                      suitable for use in constructing a document ID.
+    vol_start_index (int): The start index of the volume number in the citation line.
+    """
+    volume_pattern = re.compile(r'(\d+)\D+' + re.escape(str(first_page)))
+    volume_match = volume_pattern.search(citation_line)
+    if volume_match:
+        volume_num = int(volume_match.group(1))
+        doc_id_vol = volume_match.group(1).zfill(3)  # Ensuring three digits for the doc_id
+        vol_start_index = volume_match.start(1)      # Start index of the volume in the citation line
+        return volume_num, doc_id_vol, vol_start_index
+    else:
+        raise ValueError("Volume not found in the citation.")
