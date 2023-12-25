@@ -652,3 +652,58 @@ def extract_volume_from_citation(citation_line, first_page):
         return volume_num, doc_id_vol, vol_start_index
     else:
         raise ValueError("Volume not found in the citation.")
+
+
+def extract_doc_id_YVP_from_cite_line(paper, LR_ID, counter, yearvolpage_log_path):
+    """
+    Extract metadata from the citation line of a paper and construct a document ID.
+
+    Args:
+    paper (LRPaper): The LRPaper object.
+    LR_ID (int): Identifier for LR.
+    counter (int): A counter value.
+    yearvolpage_log_path (str): Path to the log file for recording the process.
+
+    Returns:
+    None: The function updates the LRPaper object and logs the outcome.
+    """
+    LR_ID_str = str(LR_ID)
+    counter_str = str(counter)
+
+    try:
+        citation_line = paper.cite_line.strip()
+
+        try:
+            paper.year, doc_id_year = extract_year_from_citation(citation_line)
+        except Exception as e:
+            paper.year, paper.first_page, paper.vol, paper.vol_start_index = None, None, None, None
+            paper.doc_id = int(LR_ID_str + "0000" + "000" + counter_str)  # Seven zeros in a row --> indicating an error via doc_id.
+            log_error(f"ERROR with {paper.full_text}: {str(e)}\nCould not extract Year of publication for {paper.full_text}, with doc_id: {paper.doc_id}\n\n", yearvolpage_log_path)
+            print(f"ERROR with {paper.full_text}: {str(e)}\nCould not extract Year of publication for {paper.full_text}, with doc_id: {paper.doc_id}\n\n")
+            return
+
+        try:
+            paper.first_page = extract_first_page_from_citation(citation_line, paper.year)
+        except Exception as e:
+            paper.first_page, paper.vol, paper.vol_start_index = None, None, None
+            paper.doc_id = int(LR_ID_str + doc_id_year + "000" + counter_str)
+            log_error(f"ERROR with {paper.full_text}: {str(e)}\nCould not extract First Page for {paper.full_text}, with doc_id: {paper.doc_id}\n\n", yearvolpage_log_path)
+            print(f"ERROR with {paper.full_text}: {str(e)}\nCould not extract First Page for {paper.full_text}, with doc_id: {paper.doc_id}\n\n")
+            return
+
+        try:
+            paper.vol, doc_id_vol, paper.vol_start_index = extract_volume_from_citation(citation_line, paper.first_page)
+        except Exception as e:
+            paper.vol, paper.vol_start_index = None, None
+            paper.doc_id = int(LR_ID_str + doc_id_year + "000" + counter_str)
+            log_error(f"ERROR with {paper.full_text}: {str(e)}\nCould not extract Volume for {paper.full_text}, with doc_id: {paper.doc_id}\n\n", yearvolpage_log_path)
+            print(f"ERROR with {paper.full_text}: {str(e)}\nCould not extract Volume for {paper.full_text}, with doc_id: {paper.doc_id}\n\n")
+            return
+
+        paper.doc_id = int(LR_ID_str + doc_id_year + doc_id_vol + counter_str)
+
+    except Exception as ex:
+        paper.year, paper.first_page, paper.vol, paper.vol_start_index = None, None, None, None
+        paper.doc_id = int(LR_ID_str + "0000" + "000" + counter_str)  # Seven zeros in a row --> indicating an error via doc_id.
+        log_error(f"ERROR with {paper.full_text}: {str(ex)}\nCould not extract Citation Line Pattern for {paper.full_text}, with doc_id: {paper.doc_id}\n\n", yearvolpage_log_path)
+        print(f"ERROR with {paper.full_text}: {str(ex)}\nCould not extract Citation Line Pattern for {paper.full_text}, with doc_id: {paper.doc_id}\n\n")
