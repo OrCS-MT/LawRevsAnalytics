@@ -707,3 +707,37 @@ def extract_doc_id_YVP_from_cite_line(paper, LR_ID, counter, yearvolpage_log_pat
         paper.doc_id = int(LR_ID_str + "0000" + "000" + counter_str)  # Seven zeros in a row --> indicating an error via doc_id.
         log_error(f"ERROR with {paper.full_text}: {str(ex)}\nCould not extract Citation Line Pattern for {paper.full_text}, with doc_id: {paper.doc_id}\n\n", yearvolpage_log_path)
         print(f"ERROR with {paper.full_text}: {str(ex)}\nCould not extract Citation Line Pattern for {paper.full_text}, with doc_id: {paper.doc_id}\n\n")
+
+#Function - Generates authors & title Line (authors_title_text)
+def create_author_title_line(paper, vol_start_index, auth_title_text_log_path):
+    """
+    Extract and format the author and title line from the paper's citation line.
+
+    Args:
+    paper (LRPaper): The LRPaper object.
+    vol_start_index (int): The index where the volume information starts in the citation line.
+    auth_title_text_log_path (str): Path to the log file for recording errors.
+
+    Returns:
+    None: The function updates the 'authors_title_text' attribute of the LRPaper object.
+    """
+    try:
+        # Extract the required part of the text from 'cite_line'
+        author_title_text = paper.cite_line[:vol_start_index]
+        last_comma_index = author_title_text.rfind(',')
+        if last_comma_index != -1:
+            author_title_text = paper.cite_line[:last_comma_index]
+
+        # Replace multiple spaces with a single one, replace every ", " with a new line, remove leading/trailing spaces from each line, and uppercase text.
+        author_title_text = ' '.join(author_title_text.split())
+        author_title_text = author_title_text.replace(", ", "\n")
+        author_title_text = "\n".join([line.strip() for line in author_title_text.split("\n")])
+        author_title_text = author_title_text.upper()
+
+        paper.authors_title_text = author_title_text
+
+    except Exception as e:
+        paper.authors_title_text = None
+        error_message = f"ERROR: {str(e)} \nAn error occurred while extracting the author/title line for {paper.full_text} (doc_id: {paper.doc_id}).\n\n"
+        print(error_message)
+        log_error(error_message, auth_title_text_log_path)
