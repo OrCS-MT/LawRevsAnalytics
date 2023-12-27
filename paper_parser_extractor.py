@@ -741,3 +741,49 @@ def create_author_title_line(paper, vol_start_index, auth_title_text_log_path):
         error_message = f"ERROR: {str(e)} \nAn error occurred while extracting the author/title line for {paper.full_text} (doc_id: {paper.doc_id}).\n\n"
         print(error_message)
         log_error(error_message, auth_title_text_log_path)
+
+#Function - Extract authors & title (extracting from authors_title_text)
+def extract_authors_and_title(paper, extract_authors_and_title_log_path):
+    """
+    Extract and assign authors and title from the 'authors_title_text' attribute of a paper object.
+
+    Args:
+    paper (LRPaper): The LRPaper object from which authors and title are to be extracted.
+    extract_authors_and_title_log_path (str): Path to the log file for recording errors.
+
+    Returns:
+    None: The function updates the 'authors' and 'title' attributes of the LRPaper object.
+    """
+    temp_authors_title = getattr(paper, 'authors_title_text', None)
+    curr_authors = None
+    curr_title = None
+
+    try:
+        if temp_authors_title and isinstance(temp_authors_title, str):
+            lines = temp_authors_title.strip().split('\n')
+
+            if '&' in temp_authors_title: # Check if "&" character is present in the text
+                if '&' in lines[0]:  # If "&" is in the first line, split the authors
+                    authors = [author.strip() for author in lines[0].split('&')]
+                    curr_authors = authors
+                    curr_title = ', '.join(line.strip() for line in lines[1:]) # Combine the remaining lines into the title, replacing new lines with ", "
+                else:  # "&" present, but not in the first line (i.e., more than two authors OR '&' in the title) - need to be treated differently.
+                    log_error(f"Unexpected format: '&' is present, but NOT in the first line: {temp_authors_title}\nPassing this LRPaper to the funtion 'multipleauthors_OR_ampersand_extract_authors_and_title'", extract_authors_and_title_log_path)
+                    paper.authors, paper.title = multipleauthors_OR_ampersand_extract_authors_and_title(paper, extract_authors_and_title_log_path)
+                    return
+
+            else:  # "&" not present at all, thus the first line is the single author's name
+                curr_authors = [lines[0].strip()]
+                curr_title = ', '.join(line.strip() for line in lines[1:]) # Combine the remaining lines into the title, replacing new lines with ", "
+
+        else: # If 'temp_authors_title' is not valid, raise an error to trigger the error handling
+            raise ValueError(f"Invalid 'authors_title_text' attribute. Currently, authors_title_text holds the value: {paper.authors_title_text}")
+
+    except Exception as e:
+        curr_authors = None
+        curr_title = None
+        error_message = f"ERROR: Could not identify authors and title for {paper.full_text}. (doc_id: {paper.doc_id}).\nError Type: {str(e)}\n\n"
+        print(error_message)
+        log_error(error_message, extract_authors_and_title_log_path)
+
+    paper.authors, paper.title = curr_authors, curr_title
