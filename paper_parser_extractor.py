@@ -833,3 +833,62 @@ def multipleauthors_OR_ampersand_extract_authors_and_title(paper, extract_author
         log_error(error_message, extract_authors_and_title_log_path)
 
     return tmp_authors, tmp_title
+
+
+#Function - Find Horozontal Lines in a Page
+### Try to tweak the following varialbes to make a more/less stringency with line detection: (1)tolerance (2)connectivity (3)length > height * 20 [change the number to higher/lower ratio] (4)gray_image < 1 (raise 1 to get more hues of color and set them as black)
+### IMPROVMENT: more stringent and accurate detection by limiting line y-position in the document (line is only valid if it lower than XXX) ---> Can add this condition after the line of "height <= line_thickness_tolerance and length > height * 20"
+def find_horizontal_lines(current_page_num, image_np, blindspot, grayscale_threshold, thickness_tolerance, min_length):### A higher number for line_thickness_tolerance means the function will be less strict and consider thicker shapes as potential lines.
+                                                              ### Conversely, a lower number means the function will be more stringent, only accepting very thin, almost perfect lines
+                                                              ### This tolerance is measured in pixels, which are the tiny dots that make up an image on the screen. So, "1" means one pixel
+                                                              ### maybe change thickness for different journals
+    """
+    Find horizontal lines in an image based on specific criteria.
+
+    Args:
+    current_page_num (int): The current page number being processed.
+    image_np (numpy.ndarray): The image in which to find horizontal lines.
+    blindspot (float): The proportion of the image to ignore from the top.
+    grayscale_threshold (int): The threshold value to convert the image to binary.
+    thickness_tolerance (int): The tolerance for the thickness of the lines.
+    min_length (int): The minimum length for a region to be considered a line.
+
+    Returns:
+    list: A list of tuples, each representing the position and length of a detected horizontal line.
+    """
+    image_height = image_np.shape[0] # shape[0] holds the height (number of rows)
+    min_distance_from_top = blindspot * image_height # calculate min distance from top, based on blindspot and the image_height
+
+    gray_image = np.mean(image_np, axis=2) # Convert the image to grayscale; axis=2 means collapsing each 3D RGB represented pixel into a 2D BW pixel (resulting in a grayscale image)
+
+    ###Check
+    #max_value, min_value = np.max(gray_image), np.min(gray_image)
+    #print(f"Grayscale Threshold is currently: {grayscale_threshold}\n Max value: {max_value}, Min value: {min_value}")
+
+    # Create a binary image based on the grayscale threshold
+    binary_image = gray_image < grayscale_threshold  #  Black is represented by 0, White is represented by 255
+                                    # Setting here a higher number means 'catching' more cases (not necessarily correct ones, as we get farther from Black)
+
+    # Label connected regions in the binary image
+    labels = measure.label(binary_image, connectivity=2) # "2" (or 8-connectivity) means that a pixel can be connected to another if it is touching it from any side or even just a corner. It's the more inclusive option, allowing diagonal connections.
+                                                          # "1" (or 4-connectivity) would mean pixels have to be touching sides, not just corners, to be considered connected.
+                                                          # Implications: "2" means more shapes will be considered single regions because it allows for diagonal connections. "1"  means fewer shapes will be grouped together, possibly leading to more, smaller regions.
+    props = measure.regionprops(labels)
+
+    # Identify horizontal lines from labeled regions
+    horizontal_lines = []
+    for region in props:
+        min_row, min_col, max_row, max_col = region.bbox
+        height = max_row - min_row
+        length = max_col - min_col
+
+        # Check if region meets the criteria for a horizontal line (low height compared to length)
+        if (height <= thickness_tolerance and # Condition for thickness tolerance
+           length > min_length and # Condition for minimum length
+           min_row > min_distance_from_top): # Condition to avoid blindspot area
+            horizontal_lines.append((min_row, length))
+            ###Check
+            #print(f"Page {current_page_num+1}: Length {length}, Height {height}, Minimal allowed length = {min_length}")
+            #print(f"Detected line thickness: \n{height}")
+
+    return horizontal_lines
