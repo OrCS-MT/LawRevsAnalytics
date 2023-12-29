@@ -787,3 +787,49 @@ def extract_authors_and_title(paper, extract_authors_and_title_log_path):
         log_error(error_message, extract_authors_and_title_log_path)
 
     paper.authors, paper.title = curr_authors, curr_title
+
+
+#Function - Alternative Function for Extracting Authors, Titles ---> IN CASES OF '&' WITHIN THE TITLE (after the 1st line)
+def multipleauthors_OR_ampersand_extract_authors_and_title(paper, extract_authors_and_title_log_path):
+    try:
+        tmp_authors, tmp_title = None, None
+        authors_error, title_error = False, False
+        log_error(f"Processing authors and title for {paper.filename} via the alternative function ('multipleauthors_OR_ampersand_extract_authors_and_title').", extract_authors_and_title_log_path)
+        with open(paper.PDF, 'rb') as file:
+            reader = PyPDF2.PdfReader(file)
+            metadata = reader.metadata
+    except Exception as e:
+        error_message = f"ERROR: Problem with accessing the PDF file *OR* in reading it. Error type: {str(e)}\n\n"
+        log_error(error_message, extract_authors_and_title_log_path)
+        return tmp_authors, tmp_title
+
+    try:
+        tmp_authors = metadata.get('/Author')
+        if tmp_authors:
+            tmp_authors = tmp_authors.replace(", and ", ";")
+            tmp_authors = tmp_authors.replace(" and ", ";")
+            tmp_authors = tmp_authors.replace(", & ", ";")
+            tmp_authors = tmp_authors.replace(" & ", ";")
+            tmp_authors = tmp_authors.replace(", ", ";")
+            tmp_authors = tmp_authors.split(";")
+    except Exception as e:
+        authors_error = True
+
+    try:
+        tmp_title = metadata.get('/Title')
+    except Exception as e:
+        title_error = True
+
+    error_message = ""
+    if authors_error and title_error:
+        error_message = f"ERROR: Could not identify authors AND title for {paper.full_text} via the alternative function. (doc_id: {paper.doc_id}).\nError Type: {str(e)}\n\n"
+    elif authors_error:
+        error_message = f"ERROR: Found title, BUT could not identify authors for {paper.full_text} via the alternative function. (doc_id: {paper.doc_id}).\nError Type: {str(e)}\n\n"
+    elif title_error:
+        error_message = f"ERROR: Found authors, BUT could not identify title for {paper.full_text} via the alternative function. (doc_id: {paper.doc_id}).\nError Type: {str(e)}\n\n"
+
+    if error_message:
+        print(error_message)
+        log_error(error_message, extract_authors_and_title_log_path)
+
+    return tmp_authors, tmp_title
