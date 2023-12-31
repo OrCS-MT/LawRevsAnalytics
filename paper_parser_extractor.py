@@ -892,3 +892,155 @@ def find_horizontal_lines(current_page_num, image_np, blindspot, grayscale_thres
             #print(f"Detected line thickness: \n{height}")
 
     return horizontal_lines
+
+
+#Function - Process FNs and Main
+def fns_and_main_processing(paper, main_fns_texts_dir, main_fns_text_division_log_path, first_last_fns_log_path,
+                            blindspot_area, zoom, grayscale_threshold, thickness_tolerance, min_length):
+    """
+    Process the given paper's PDF to separate the main text and footnotes.
+
+    Args:
+    paper (LRPaper): The paper object containing the PDF path.
+    main_fns_texts_dir (str): Directory where the extracted texts will be saved.
+    main_fns_text_division_log_path (str): Log file path for this processing step.
+    first_last_fns_log_path (str): Log file path for first and last footnotes.
+    blindspot_area (float): Area at the top of the page to ignore when finding lines.
+    zoom (float): Zoom level for rendering the page.
+    grayscale_threshold (int): Threshold for converting the image to binary.
+    thickness_tolerance (int): Tolerance for the thickness of detected lines.
+    min_length (int): Minimum length for a line to be considered.
+
+    Returns:
+    main_txt_path (str): Path to the file where the merged main text of the document is saved.
+    fns_txt_path (str): Path to the file where the merged footnotes text of the document is saved.
+    """
+    main_txt_path = fns_txt_path = None
+
+    if paper.PDF is None:
+        print("Error: PDF attribute is None for paper:", paper.full_text)
+        log_error("Error: PDF attribute is None for paper: "+paper.full_text+"\n", main_fns_text_division_log_path)
+        return main_txt_path, fns_txt_path
+
+    complete_main_text, complete_fns_text = [], []
+
+    try:
+        with fitz.open(paper.PDF) as pdf_document:
+            num_pages = len(pdf_document)
+            log_error("Currently processing file: "+paper.full_text+"\n", main_fns_text_division_log_path)
+
+            for current_page_num in range(1, num_pages): # 1 here skips the title page
+                #print(f"Processing text on page {current_page_num+1}")
+                page = pdf_document[current_page_num] # If encountering a problem, change to "page = pdf_document.load_page(current_page_num)"
+                mat = fitz.Matrix(zoom, zoom) # Render the page as an image using the zoom factor (zooming the picture [via matrix])
+                pix = page.get_pixmap(matrix=mat, alpha=False) # representing the actual image
+                image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples) # Convert the PyMuPDF pixmap to a PIL (Python Image Library) Image
+                image_np = np.array(image) # Convert the image to a NumPy array for analysis
+
+                # Process each page based on whether it is the first page or not (if first page -> delibartely ignore the blindspot area ; otherwise, no need for a blindspot)
+                horizontal_lines = find_horizontal_lines(current_page_num, image_np, blindspot_area if current_page_num == 1 else 0, grayscale_threshold, thickness_tolerance, min_length)
+
+                if not horizontal_lines: # i.e., horizontal_lines is an empty list, namely, no separating line was found
+                    log_error(f"ATTENTION: No separating line found on page {current_page_num+1}.\n", main_fns_text_division_log_path)
+                    #print(f"ATTENTION: No separating line found on page {current_page_num+1}.")
+
+                    try:
+                        #print(f"Therefore, assiging all text on page {current_page_num+1} as Main Text.")
+                        text_above = page.get_text()
+                        #print(f"The text that was identified on page {current_page_num+1} is: \n", text_above)
+                        complete_main_text.append(text_above)
+                    except: # probably an empty page
+                        #print(f"No text was found on page {current_page_num+1}, so moving forward.")
+                        complete_main_text.append("\n")
+                    continue  # continue to the next page of this file
+
+                else:
+                    #print(f"Found a separating line on page {current_page_num+1}.")
+                    longest_line = max(horizontal_lines, key=lambda x: x[1])  # The line with the maximum length
+                    line_position_pdf = longest_line[0] / zoom  # Approximate position in the PDF coordinates
+                    # VERIFICATION print(longest_line[1])
+                    # VERIFICATION print(f"The most prominent horizontal line is at position {line_position_pdf} (length: {longest_line[1]/zoom} pixels)")
+                    # Find the text above and below the horizontal line
+                    text_above, text_below = "", ""
+
+                    # Define the area above the horizontal line for text extraction
+                    # Ensure this rect is correctly defined with proper coordinates
+                    rect_above_line = fitz.Rect(0, 0, page.rect.width, line_position_pdf)
+                    # Extract text from the area above the horizontal line
+                    text_above = page.get_text("text", clip=rect_above_line)
+                    complete_main_text.append(text_above)
+
+                    # Define the area below the horizontal line for text extraction
+                    # Ensure this rect is correctly defined with proper coordinates
+                    rect_below_line = fitz.Rect(0, line_position_pdf, page.rect.width, page.rect.height)
+                    # Extract text from the area below the horizontal line
+                    text_below = page.get_text("text", clip=rect_below_line)
+                    complete_fns_text.append(text_below)
+
+                    #print(f"The text above the line on page {current_page_num+1} is:\n {text_above} \n\n\n.")
+                    #print(f"The text below the line on page {current_page_num+1} is:\n {text_below} \n\n\n.")
+
+                #print(f"*******Finished text extraction for page {current_page_num+1}.*******")
+
+            merged_main_text = "".join(complete_main_text)
+            #print(f"All Main Text on file {paper.filename}: \n {merged_main_text}")
+            merged_fns_text = "".join(complete_fns_text)
+            #print(f"All FNs Text on file {paper.filename}: \n {merged_fns_text}")
+            #VERIFICATION print(merged_main_text)
+            #VERIFICATION print(merged_fns_text)
+            main_txt_path = os.path.join(main_fns_texts_dir, (paper.filename + "_M"+ ".txt"))
+            fns_txt_path = os.path.join(main_fns_texts_dir, (paper.filename + "_FN"+ ".txt"))
+
+            with open(main_txt_path, 'w', encoding='utf-8') as txt_file:
+                txt_file.write(merged_main_text)
+
+            with open(fns_txt_path, 'w', encoding='utf-8') as txt_file:
+                txt_file.write(merged_fns_text)
+
+            # logging finish point of processing Main and FNs text for this PDF file
+            log_error(f" Finished processing Main and FNs text for file: {paper.full_text}\n\n", main_fns_text_division_log_path)
+
+    except Exception as e:
+        main_txt_path=None
+        fns_txt_path=None
+        log_error(f" ERROR: Could not open/read PDF for file: {paper.full_text}\n\n", main_fns_text_division_log_path)
+        print(f" ERROR {str(e)}: Could not open/read PDF for file {paper.full_text}\n\n")
+
+    return main_txt_path, fns_txt_path
+
+
+def fns_and_main_processing_with_timeout(paper, main_fns_texts_dir, main_fns_text_division_log_path, first_last_fns_log_path,
+                                         blindspot_area, zoom, grayscale_threshold, thickness_tolerance, min_length, timeout=60):
+
+    # This internal function will be run in a separate process and is designed to put its return values into a queue
+    def process_wrapper(queue, *args):
+        result = fns_and_main_processing(*args)  # calling the original function with the arguments passed to the process
+        queue.put(result)
+
+    # Create a queue to share results
+    result_queue = multiprocessing.Queue()
+
+    # Set up the process with the wrapper function and pass the necessary arguments
+    proc_args = (paper, main_fns_texts_dir, main_fns_text_division_log_path, first_last_fns_log_path,
+                 blindspot_area, zoom, grayscale_threshold, thickness_tolerance, min_length)
+    proc = multiprocessing.Process(target=process_wrapper, args=(result_queue, *proc_args))
+
+    proc.start()  # start the process
+    proc.join(timeout)  # Allow the process to run for 'timeout' seconds
+
+    if proc.is_alive():
+        # If the process is still running after 'timeout' seconds, terminate it
+        proc.terminate()
+        proc.join()  # Ensure all resources are cleaned up
+
+        # Log the timeout error
+        log_error(f"TIMEOUT ERROR: Failed to process {paper.full_text} within {timeout} seconds.\n\n", main_fns_text_division_log_path)
+        print(f"Timeout error: Failed to process {paper.full_text} within {timeout} seconds.\n")
+        main_txt_path = fns_txt_path = None  # You might want to handle this case differently, depending on your needs
+
+    else:
+        # If the process finished successfully, retrieve the results from the queue
+        main_txt_path, fns_txt_path = result_queue.get()  # This will block until there are items in the queue
+
+        # Now, you can return these values to the caller, or do additional processing
+    return main_txt_path, fns_txt_path
