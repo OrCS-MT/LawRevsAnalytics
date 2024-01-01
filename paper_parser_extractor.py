@@ -1044,3 +1044,50 @@ def fns_and_main_processing_with_timeout(paper, main_fns_texts_dir, main_fns_tex
 
         # Now, you can return these values to the caller, or do additional processing
     return main_txt_path, fns_txt_path
+
+
+#Function - Clear journal Name from main_text
+def clear_journal_name(paper, main_fns_text_division_log_path):
+    """
+    Remove instances of the journal's name from the main text of a paper and update the main text length.
+
+    Args:
+    paper (LRPaper): The paper object containing the journal name and main text file path.
+    main_fns_text_division_log_path (str): Path to the log file for recording errors.
+
+    Returns:
+    None: The function updates the 'main_text' and 'main_text_length' attributes of the paper object.
+    """
+    if (paper.main_text is None) or (paper.journal is None):
+        error_message = f"ERROR: Journal or main_text is None, thus unable to clear journal name for: {paper.full_text}\n\n"
+        print(error_message)
+        log_error(error_message, main_fns_text_division_log_path)
+        return
+
+    #CEHCK print("Main Length pre - ", paper.main_text_length)
+    try:
+        with open(paper.main_text, 'r', encoding='utf-8') as file:
+            file_content = file.read()
+    except Exception as e:
+        error_message = f"ERROR: {str(e)}\nCould not open/read main_text file for: {paper.full_text}.\n\n"
+        print(error_message)
+        log_error(error_message, main_fns_text_division_log_path)
+        return
+
+    # removing journal name and updating the main_text file
+    try:
+        # pattern is the word to remove (journal), case insensitivity
+        pattern = re.compile(re.escape(paper.journal), re.IGNORECASE)
+        updated_content = pattern.sub('', file_content)
+        with open(paper.main_text, 'w', encoding='utf-8') as file:
+            file.write(updated_content)
+        paper.main_text_length = count_words_in_file(paper.main_text, main_fns_text_division_log_path)
+
+    #CHECK print("Main Length post - ", paper.main_text_length)
+
+    except Exception as e:
+        error_message = f"ERROR {str(e)}: Error while removing journal name / rewriting the main_text file for: {paper.full_text}.\n\n"
+        print(error_message)
+        log_error(error_message, main_fns_text_division_log_path)
+        return
+
