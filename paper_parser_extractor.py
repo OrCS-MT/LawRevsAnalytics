@@ -1091,3 +1091,119 @@ def clear_journal_name(paper, main_fns_text_division_log_path):
         log_error(error_message, main_fns_text_division_log_path)
         return
 
+#Function - Find First, Last, and Total FNs
+def extract_first_last_total_fns(paper, first_last_fns_log_path):
+    """
+    Extract the first and last footnotes and the total number of footnotes from a paper.
+
+    Args:
+    paper (Paper): The paper object containing the footnotes text file path.
+    first_last_fns_log_path (str): Path to the log file for recording errors.
+
+    Returns:
+    None: The function updates the 'first_fn_num', 'last_fn_num', 'total_fns', 'first_fn_text', and 'last_fn_text' attributes of the paper object.
+    """
+        # helper func - check sequential triplet
+    def is_sequential(sub_list):
+        """
+        Check if a sublist of footnotes is sequential.
+        Args:
+        sub_list (list): A list of footnote tuples.
+        Returns:
+        bool: True if the footnotes are sequential, False otherwise.
+        """
+        return all(sub_list[i][0] + 1 == sub_list[i + 1][0] for i in range(len(sub_list) - 1))
+
+    # helper func - remove duplications
+    def remove_duplicates(sorted_list):
+        """
+        Remove duplicate entries from a sorted list of footnotes.
+        Args:
+        sorted_list (list): A sorted list of footnote tuples.
+        Returns:
+        list: A deduplicated list of footnotes.
+        """
+        if len(sorted_list) <= 1:
+            return sorted_list
+
+        deduplicated_list = [sorted_list[0]]
+        existing_keys = {sorted_list[0][0]}  # Set containing the keys of the tuples already added
+
+        for element in sorted_list[1:]:
+            if element[0] not in existing_keys:
+                deduplicated_list.append(element)
+                existing_keys.add(element[0])
+
+        return deduplicated_list
+
+
+    if not paper.fns_text:  # empty path
+        print("Path is empty\n")
+        log_error("Path is empty\n\n", first_last_fns_log_path)
+        return
+
+    try:
+        first_fn = last_fn = total_fn = None
+        with open(paper.fns_text, 'r', encoding='utf-8') as file:
+            fns_lines = file.readlines()
+
+        # Define the regex pattern for footnotes, ensuring there's a period (with optional space) after the number
+        pattern = re.compile(r'^\s*(\d{1,3}) ?\.(.*)', re.MULTILINE)
+
+        matches = []
+        for line in fns_lines:
+            match = pattern.match(line)
+            if match:
+                # match.group(0) is the entire matched string (the full line here)
+                full_line = match.group(0).strip()
+                # match.group(1) is the number, we convert it to an integer
+                footnote_number = int(match.group(1))
+                matches.append((footnote_number, full_line))
+
+        matches.sort(key=lambda x: x[0])  # Sorting by the first element of the tuple
+        matches = remove_duplicates(matches)
+
+        if not matches:
+            return
+
+        # Find the first sequence of three sequential numbers
+        for i in range(len(matches) - 2):
+            if is_sequential(matches[i:i + 3]):
+                first_fn = matches[i][0]
+                break
+
+        # Find the last sequence of three sequential numbers
+        for i in range(len(matches) - 3, -1, -1):
+            if is_sequential(matches[i:i + 3]):
+                last_fn = matches[i + 2][0]  # This is the last number of the found sequence
+                break
+
+        # Additional checks if necessary
+        if len(matches) > 3 and first_fn is not None and last_fn is not None:
+            if last_fn <= first_fn:
+                first_fn = None
+                last_fn = None
+
+        paper.first_fn_num = first_fn
+        paper.last_fn_num = last_fn
+        if paper.last_fn_num >= paper.first_fn_num:
+            paper.total_fns = paper.last_fn_num - paper.first_fn_num + 1
+
+        for match in matches:
+            if match[0] == first_fn:
+                paper.first_fn_text = match[1]  # The text of the footnote
+                #print(paper.first_fn_text)
+                break
+
+        for i in range(len(matches) - 1, -1, -1):
+            match = matches[i]
+            if match[0] == last_fn:
+                paper.last_fn_text = match[1]  # The text of the footnote
+                #print(paper.last_fn_text)
+                break
+
+    except Exception as e:
+        error_message = f"ERROR: Could not process the FNs order/counting/text for {paper.full_text}.\n"
+        print(error_message)
+        log_error(error_message+"\n", first_last_fns_log_path)
+        paper.first_fn_num = paper.last_fn_num = paper.total_fns = paper.first_fn_text = paper.last_fn_text = None
