@@ -1207,3 +1207,53 @@ def extract_first_last_total_fns(paper, first_last_fns_log_path):
         print(error_message)
         log_error(error_message+"\n", first_last_fns_log_path)
         paper.first_fn_num = paper.last_fn_num = paper.total_fns = paper.first_fn_text = paper.last_fn_text = None
+
+#Function - Extract acknowledgment Paragraph
+def extract_acknowledgment_text(paper, ACK_log_path):
+    """
+    Extract the acknowledgment text from the footnotes of a paper.
+
+    Args:
+    paper (Paper): The paper object containing the footnotes text file path and first footnote text.
+    ACK_log_path (str): Path to the log file for recording errors.
+
+    Returns:
+    None: The function updates the 'acknowledgment' attribute of the paper object.
+    """
+    block_pattern = re.compile(r'^\s*(\d{1,3}) ?\.', re.MULTILINE)
+    try:
+        if (paper.fns_text is None) or (paper.first_fn_text is None):
+            return
+
+        with open(paper.fns_text, 'r', encoding='utf-8') as txt_file:
+            all_fn_text = txt_file.read()
+            #print("looking for the following text:", paper.first_fn_text)
+            if paper.first_fn_text in all_fn_text:
+                first_fn_index = all_fn_text.find(paper.first_fn_text)
+                ACK_text = all_fn_text[:first_fn_index]
+                ACK_text = clean_text(ACK_text)
+                #print("After cleaning:", ACK_text,"\n\n")
+                if not ACK_text or ACK_text.isspace(): # ACK_text is empty or includes only spaces, thus practically empty.
+                    #print("This ACK is empy!\n\n")
+                    ACK_text = "No acknowledgment Text"
+                else: # ACK_text is not empty or just spaces
+                    # Cheking if the ACK_text is actually a false positive in the shape of fns from a previous paper or text mis-extraction
+                    for line in ACK_text.split('\n'):
+                        if block_pattern.match(line):
+                            # If any line matches the pattern, set ACK_text to the specified value
+                            ACK_text = "No acknowledgment Text"
+                            break
+
+            else:
+                ACK_text = None
+                message = f"ATTENTION: Could not find the first FN in the FNs text! File: {paper.full_text}.\n"
+                print(message)
+                log_error(message+"\n", ACK_log_path)
+
+    except Exception as e:
+        ACK_text = None
+        error_message = f"ERROR {str(e)} while processing acknowledgment information for {paper.full_text}.\n"
+        print(error_message)
+        log_error(error_message+"\n", ACK_log_path)
+
+    paper.acknowledgment = ACK_text
