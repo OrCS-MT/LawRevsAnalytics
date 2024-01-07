@@ -1257,3 +1257,74 @@ def extract_acknowledgment_text(paper, ACK_log_path):
         log_error(error_message+"\n", ACK_log_path)
 
     paper.acknowledgment = ACK_text
+
+
+#Function - Splitting and Extracting start/mid/end
+def split_start_mid_end(paper, SME_log_path, SME_dir):
+    """
+    Split the main text of a paper into start, middle, and end segments, and save them to separate files.
+
+    Args:
+    paper (Paper): The paper object containing the main text file path and filename.
+    SME_log_path (str): Path to the log file for recording errors.
+    SME_dir (str): Directory path where the segmented files will be saved.
+
+    Returns:
+    None: The function updates the 'start', 'mid', and 'end' attributes of the paper object with file paths.
+    """
+    if (paper.main_text is None) or (paper.main_text_length is None):
+        message = f"Skip Message: No main_text for file {paper.full_text}.\n"
+        log_error(message+"\n", SME_log_path)
+        return
+
+    try:
+        with open(paper.main_text, 'r', encoding='utf-8') as text_file:
+            main_text = text_file.read()
+
+        # Check if empty, or just whitespace
+        if not main_text or len(main_text.strip()) == 0 or main_text.isspace() or paper.main_text_length < 100:
+            message = f"ATTENTION: main_text seems to be empty or extremely short! File skipped: {paper.full_text}."
+            print(message)
+            log_error(message, SME_log_path)
+            return
+
+        words = main_text.split(' ')
+        main_text_length = len(words)
+        start, mid, end = "", "", ""
+
+        # Create start, mid, end files
+        # If the text length is 4500 words or more
+        if main_text_length >= 4500:
+            start = " ".join(words[:1500])
+            mid_start = (main_text_length - 1500) // 2
+            mid_end = mid_start + 1500
+            mid = ' '.join(words[mid_start:mid_end])
+            end = " ".join(words[-1500:])
+
+        # Text is shorter than 4500 words
+        else:
+            paper.short_SME_flag = True
+            one_third = main_text_length // 3
+            start = " ".join(words[:one_third])
+            mid = " ".join(words[one_third:one_third*2])
+            end = " ".join(words[one_third*2:])
+
+        # Save the segments into files
+        if all([start, mid, end]): # if any is None, skip this part
+            start_path = os.path.join(SME_dir, f"{paper.filename}_start.txt")
+            mid_path = os.path.join(SME_dir, f"{paper.filename}_mid.txt")
+            end_path = os.path.join(SME_dir, f"{paper.filename}_end.txt")
+            with open(start_path, 'w', encoding='utf-8') as txt_file:
+                txt_file.write(start)
+            with open(mid_path, 'w', encoding='utf-8') as txt_file:
+                txt_file.write(mid)
+            with open(end_path, 'w', encoding='utf-8') as txt_file:
+                txt_file.write(end)
+
+            paper.start, paper.mid, paper.end = start_path, mid_path, end_path
+
+    except Exception as e:
+        message = f"ERROR {str(e)}\nwhile processing start / mid / end text for file {paper.full_text}.\n\n"
+        print(message)
+        log_error(message, SME_log_path)
+        paper.start = paper.mid = paper.end = None
