@@ -1328,3 +1328,95 @@ def split_start_mid_end(paper, SME_log_path, SME_dir):
         print(message)
         log_error(message, SME_log_path)
         paper.start = paper.mid = paper.end = None
+
+
+#Function - Merge start + mid + end into one file
+def merge_SME(paper, SME_dir, SME_log_path, ignore_factor = 0.6):
+    """
+    Merge the start, middle, and end text segments of a paper into a single file.
+
+    Args:
+    paper (Paper): The paper object with paths to the text segments and flags.
+    SME_dir (str): Directory where the merged file will be saved.
+    SME_log_path (str): Path to the log file for recording errors.
+    ignore_factor (float): Factor to determine how much of the start and end segments to ignore in short SME merging.
+
+    Returns:
+    None: The function updates the 'SME' attribute of the paper object with the merged file path.
+    """
+
+    def read_partial_file(file_path, exclude_start=None, exclude_end=None):
+        """
+        Reads a file and returns its content, excluding certain portions if specified.
+
+        Args:
+        file_path (str): The path to the text file.
+        exclude_start (int, optional): Number of words to exclude from the start.
+        exclude_end (int, optional): Number of words to exclude from the end.
+
+        Returns:
+        str: The modified content of the file.
+        """
+        with open(file_path, 'r', encoding='utf-8') as file:
+            words = file.read().split()
+            if exclude_start:
+                words = words[exclude_start:]
+            if exclude_end:
+                words = words[:-exclude_end] if exclude_end else words
+            return ' '.join(words)
+
+    # Check if any of the file paths are None
+    if any(getattr(paper, attr) is None for attr in ['start', 'mid', 'end']):
+        missing_attributes = [attr for attr in ['start', 'mid', 'end'] if getattr(paper, attr) is None]
+        message = f"Skipped the file {paper.filename}: The following attributes are None: {', '.join(missing_attributes)}\n"
+        print(message)
+        log_error(message+"\n", SME_log_path)
+        return
+
+    # Check if general_length_problem_flag is True
+    if paper.general_length_problem_flag:
+        message = f"Skipped the file {paper.filename}: The general_length_problem_flag is set to TRUE.\n"
+        print(message)
+        log_error(message+"\n", SME_log_path)
+        return
+
+    # Define the separator pattern
+    separator = "\n" + ".....\n" * 5 ### here I removed "\n" at the end
+    # Construct the full path for the new file
+    merged_file_path = os.path.join(SME_dir, f"{paper.filename}_SME.txt")
+    paper.SME = merged_file_path
+
+    try:
+        title = paper.title if paper.title is not None else ""
+        with open(merged_file_path, 'w', encoding='utf-8') as merged_file:
+            if paper.short_SME_flag is False: # regular SME, with sequence breaking between start / mid / end, and therefore adding a separator.
+                    # Write the contents to the merged file with separators in between
+                    merged_file.write(title+":\n")
+                    merged_file.write(read_partial_file(paper.start))
+                    merged_file.write(separator)
+                    merged_file.write(read_partial_file(paper.mid))
+                    merged_file.write(separator)
+                    merged_file.write(read_partial_file(paper.end))
+                    merged_file.write("\n"+title)
+
+            else: # short SME, with NO sequence breaking between start / mid / end. Therefore, do not add a separator AND remove ignore_factor from start's beggining and end's ending.
+                total_expected_len = sum(count_words_in_file(path, SME_log_path) for path in [paper.start, paper.mid, paper.end])
+                # Determine the portions to be excluded
+                if total_expected_len >= 2000:
+                    start_exclude = 500
+                    end_exclude = 500
+                else:
+                    start_exclude = int(count_words_in_file(paper.start, SME_log_path) * ignore_factor)
+                    end_exclude = int(count_words_in_file(paper.end, SME_log_path) * ignore_factor)
+
+                # Write the merged file while removing portions of 'start' and 'end'
+                merged_file.write(title+":\n")
+                merged_file.write(read_partial_file(paper.start, exclude_start=start_exclude)) # begining of 'start' is being removed
+                merged_file.write(read_partial_file(paper.mid))  # 'mid' is included in full
+                merged_file.write(read_partial_file(paper.end, exclude_end=end_exclude)) # ending of 'end' is being removed
+                merged_file.write("\n"+title)
+
+    except Exception as e:
+        message = f"An error occurred while trying to merge start/mid/end of {paper.filename}: {e}\n"
+        print(message)
+        log_error(message+"\n", SME_log_path)
