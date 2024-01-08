@@ -1420,3 +1420,113 @@ def merge_SME(paper, SME_dir, SME_log_path, ignore_factor = 0.6):
         message = f"An error occurred while trying to merge start/mid/end of {paper.filename}: {e}\n"
         print(message)
         log_error(message+"\n", SME_log_path)
+
+
+#Function - Remove Extra Lines for **main_text**
+def is_title_or_uppercase(line):
+    """Check if the given line is in title case or uppercase."""
+    return line == line.title() or line == line.upper()
+
+def is_mostly_uppercase(line):
+    """Check if at least 75% of the line's characters are uppercase."""
+    uppercase_chars = sum(1 for char in line if char.isupper())
+    percentage_uppercase = (uppercase_chars / len(line)) * 100 if line else 0
+    return percentage_uppercase >= 75
+
+def ends_with_punctuation(line):
+    """Check if the given line ends with a punctuation character, excluding the dash and comma."""
+    if line:
+        last_char = line[-1]
+        return last_char in string.punctuation and last_char not in ('-', ',')
+    return False
+
+def can_join(next_line):
+    """Check if the next line can be joined with the previous line."""
+    stripped_next_line = next_line.strip()
+    if not stripped_next_line:  # if next line is empty, we can join
+        return True
+
+    # Check if the next line is in title case, uppercase, or mostly uppercase
+    if (is_title_or_uppercase(stripped_next_line) or
+        is_mostly_uppercase(stripped_next_line)):
+        return False  # cannot join
+
+    return True  # can join
+
+def remove_extra_lines_main(paper, orig_length, log_path):
+    try:
+        with open(paper.main_text, 'r') as file:
+            lines = file.readlines()
+
+        # shold be in the main code ---> text_after_removing_lines = ''.join(processed_lines)
+        processed_lines = []
+        i = 0
+
+        while i < len(lines):
+            line = lines[i]
+            stripped_line = line.rstrip()
+
+            # If the line is empty or meets certain conditions, we don't join it with the next line.
+            if (not stripped_line or
+                is_title_or_uppercase(stripped_line) or
+                is_mostly_uppercase(stripped_line) or
+                ends_with_punctuation(stripped_line)):
+                processed_lines.append(line)
+                i += 1
+                continue
+
+            # If this is the last line, no joining is needed.
+            if i == len(lines) - 1:
+                processed_lines.append(line)
+                break  # Exit the loop as this is the last line
+
+            # Check the next line
+            next_line = lines[i + 1]
+            if can_join(next_line):
+                # Determine if we need to remove a character (for the dash) and join the lines
+                if stripped_line.endswith('-'):
+                    # For a dash, we join the lines directly
+                    new_line = stripped_line[:-1] + next_line.lstrip()
+                elif stripped_line.endswith(','):
+                    # For a comma, we need to ensure a space is maintained after it
+                    new_line = stripped_line + ' ' + next_line.lstrip() if not next_line.startswith(' ') else stripped_line + next_line.lstrip()
+                else:
+                    # For normal cases, ensure a space separates the joined lines
+                    new_line = stripped_line + ' ' + next_line.lstrip()
+
+                # Add the newly formed line to the processed list
+                processed_lines.append(new_line)
+                i += 2  # Move the index by 2 as we've processed an extra line
+            else:
+                processed_lines.append(line)
+                i += 1  # Move to the next line
+
+        text_after_removing_lines = ''.join(processed_lines)
+        current_length = count_words_in_string(text_after_removing_lines)
+        if (orig_length > current_length*1.05) or (orig_length < current_length*0.95):
+            print(f"ERROR: The lines removal caused a major words loss / addition (more than 5%) for {paper.full_text}:\n\n")
+            print(f"Original length: {orig_length}")
+            print(f"Updated length: {current_length}\n\n")
+            with open(log_path, 'a', encoding='utf-8') as log_file:
+                now = datetime.datetime.now()
+                log_file.write(str(now))
+                log_file.write(f"ERROR: The lines removal caused a major words loss / addition (more than 5%) for {paper.full_text}")
+                log_file.write(f"Original length: {orig_length}")
+                log_file.write(f"Updated length: {current_length}\n\n")
+            return
+            #print(f"The lines removal caused a major words loss / addition (more than 5%) for {paper.FullText}:")
+            #print(f"Original length: {orig_length}")
+            #print(f"Updated length: {current_length}")
+
+        else:
+            with open(paper.main_text, 'w', encoding='utf-8') as file:
+                file.write(text_after_removing_lines)
+
+    except Exception as e:
+        print(f"ERROR while removing extra lines for {paper.full_text}\n\n")
+        with open(log_path, 'a', encoding='utf-8') as log_file:
+            now = datetime.datetime.now()
+            log_file.write(str(now))
+            log_file.write(f" ERROR while trying to remove extra lines for {paper.full_text}\n\n")
+
+
