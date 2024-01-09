@@ -1530,3 +1530,89 @@ def remove_extra_lines_main(paper, orig_length, log_path):
             log_file.write(f" ERROR while trying to remove extra lines for {paper.full_text}\n\n")
 
 
+#Function - Add Missing Lines for **main_text**
+def add_missing_lines_main(paper, orig_length, abbrevs, log_path):
+
+    try:
+        with open(paper.main_text, 'r') as file:
+            lines = file.readlines()
+        new_text = ""
+
+        for line in lines:
+            # If the line is empty or contains only whitespace, we skip it
+            if line.strip() == "":
+                new_text += line  # We're preserving the blank line here
+                continue
+
+            temp_period_index = 0
+            while temp_period_index < len(line):
+                # Find the next period in the line
+                next_period_index = line.find('.', temp_period_index)
+
+                if next_period_index == -1:  # No more periods in the line
+                    break
+
+                # Check if this period is part of an abbreviation
+                is_abbreviation = any(line[next_period_index - len(abbrev):next_period_index + 1] == abbrev for abbrev in abbrevs)
+
+                # Check for ' v' or ' V' before the period
+                is_special_v_case = line[next_period_index - 2:next_period_index] == " v" or line[next_period_index - 2:next_period_index] == " V"
+
+                # If it's an abbreviation or special 'v' case, we skip to the next period
+                if is_abbreviation or is_special_v_case:
+                    temp_period_index = next_period_index + 1
+                    continue
+
+                # Check if the period is followed by a number, and if so, treat the number as the period
+                match = re.match(r"\.\s*\d+", line[next_period_index:])
+                if match:
+                    # The period is followed by a number, so we consider the number as the period
+                    temp_period_index = next_period_index + match.end()
+                else:
+                    temp_period_index = next_period_index + 1
+
+                # Check the characters after the period to see if we need to insert a newline
+                if temp_period_index < len(line) and line[temp_period_index].isspace():
+                    # Look ahead to find the next non-space character
+                    next_char_index = temp_period_index
+                    while next_char_index < len(line) and line[next_char_index].isspace():
+                        next_char_index += 1
+
+                    if next_char_index < len(line) and line[next_char_index].isupper():
+                        # This looks like the start of a new sentence, so we insert a newline
+                        line = line[:temp_period_index] + '\n' + line[temp_period_index:]
+                        temp_period_index = next_char_index  # Updating the index to reflect the new line character
+                    else:
+                        # Not the start of a new sentence, so we just move on
+                        continue
+                else:
+                    # Not the pattern we're looking for, so we just move on
+                    continue
+
+            # Append the processed line to the new text
+            new_text += line
+
+
+        current_length = count_words_in_string(new_text)
+        if (orig_length > current_length*1.05) or (orig_length < current_length*0.95):
+            print(f"ERROR: The lines addition caused a major words loss / addition (more than 5%) for {paper.full_text}")
+            print(f"Original length: {orig_length}")
+            print(f"Updated length: {current_length}\n\n")
+            with open(log_path, 'a', encoding='utf-8') as log_file:
+                now = datetime.datetime.now()
+                log_file.write(str(now))
+                log_file.write(f"ERROR: The lines addition caused a major words loss / addition (more than 5%) for {paper.full_text}\n\n")
+                log_file.write(f"Original length: {orig_length}")
+                log_file.write(f"Updated length: {current_length}\n\n")
+            return
+
+        else:
+            with open(paper.main_text, 'w', encoding='utf-8') as file:
+                file.write(new_text)
+
+    except Exception as e:
+        print(f"ERROR {str(e)} while trying to add missing lines for {paper.full_text}\n\n")
+        with open(log_path, 'a', encoding='utf-8') as log_file:
+            now = datetime.datetime.now()
+            log_file.write(str(now))
+            log_file.write(f" ERROR {str(e)} while trying to add missing lines for {paper.full_text}\n\n")
