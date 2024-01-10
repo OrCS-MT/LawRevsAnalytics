@@ -1616,3 +1616,36 @@ def add_missing_lines_main(paper, orig_length, abbrevs, log_path):
             now = datetime.datetime.now()
             log_file.write(str(now))
             log_file.write(f" ERROR {str(e)} while trying to add missing lines for {paper.full_text}\n\n")
+
+#Function - Reorganize ACK Text
+def reorganize_acknowledgment(paper, ACK_log_path):
+    try:
+        ack_text = paper.acknowledgment
+        lines = ack_text.splitlines()
+        processed_text = ""
+
+        for line in lines:
+            # Check if the line starts with a space followed by a number, 't', '*', or '†'
+            if line.startswith(' ') and (line.lstrip()[0].isdigit() or line.lstrip()[0] in ['t', '*', '†']):
+                processed_text += "\n" + line
+            # Check if the line starts directly with a number, 't', '*', or '†'
+            elif line[0].isdigit() or line[0] in ['t', '*', '†']:
+                processed_text += "\n" + line
+            else:
+                processed_text += ' ' + line
+
+        # Join the processed lines
+        lines = processed_text.split('\n')
+        # Remove '- ' from each line and filter out blank lines
+        cleaned_lines = [line.replace("- ", "").strip() for line in lines if line.strip()]
+        # Join the cleaned lines back into a single string
+        cleaned_text = '\n'.join(cleaned_lines)
+
+        paper.reorg_acknowledgment = cleaned_text
+        paper.reorg_acknowledgment_length = count_words_in_string(paper.reorg_acknowledgment)
+
+    except Exception as e:
+        paper.reorg_acknowledgment = None
+        paper.reorg_acknowledgment_length = None
+        print(f"ERROR IN REORGINZING ACK: {e} for the file {paper.fulltext}")
+        log_error(f"ERROR IN REORGINZING ACK: {e} for the file {paper.fulltext}.\n\n", ACK_log_path)
