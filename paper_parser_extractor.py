@@ -1649,3 +1649,43 @@ def reorganize_acknowledgment(paper, ACK_log_path):
         paper.reorg_acknowledgment_length = None
         print(f"ERROR IN REORGINZING ACK: {e} for the file {paper.fulltext}")
         log_error(f"ERROR IN REORGINZING ACK: {e} for the file {paper.fulltext}.\n\n", ACK_log_path)
+
+
+###GEN Functions
+
+#GEN Function - Generate Text Files (PDF Extraction)
+def gen_extract_text_from_pdf_with_timeout(pdf_dir=pdf_dir, pdf_to_txt_log_path=pdf_to_txt_log_path):
+    # PDF Text Extraction
+    for filename in tqdm(os.listdir(pdf_dir), desc="Extracting Text from PDFs"):
+        log_error(f"Opening file: {filename}\n", pdf_to_txt_log_path)
+        print(f"Detected a file: {filename}")
+        if filename.endswith(".pdf"):
+            log_error(f"Trying to extract text INCLUDING TITLE PAGE from: {filename}\n", pdf_to_txt_log_path)
+            pdf_path = os.path.join(pdf_dir, filename)
+            txt_filename = os.path.splitext(filename)[0] + ".txt"
+            txt_path = os.path.join(fulltext_dir, txt_filename)
+            extract_text_from_pdf_with_timeout(pdf_path, txt_path, pdf_to_txt_log_path, timeout=60)
+
+        else:  # i.e., file does not end with ".pdf"
+            print(f"Skip Message: {filename} was skippied as it is not a PDF file.\n\n")
+            log_error(f"Skip Message: {filename} was skippied as it is not a PDF file.\n\n", pdf_to_txt_log_path)
+    # Intentional delay
+    time.sleep(delay)
+    # Safety Check = no. of PDFs vs. no. of TXT"""
+    num_of_PDFs = count_specific_files(pdf_dir, '.pdf')
+    print("Number of PDFs in the PDF folder: " + str(num_of_PDFs))
+    num_of_TXTs = count_specific_files(fulltext_dir, '.txt')
+    print("Number of TXTs in the Fulltext folder: " + str(num_of_TXTs))
+    print("\n")
+    # Get the base names (without extension) of all PDF and TXT files
+    pdf_filenames = {os.path.splitext(filename)[0] for filename in os.listdir(pdf_dir) if filename.endswith('.pdf')}
+    txt_filenames = {os.path.splitext(filename)[0] for filename in os.listdir(fulltext_dir) if filename.endswith('.txt')}
+    # Find PDFs that don't have a corresponding TXT file
+    mismatched_files = pdf_filenames - txt_filenames
+    # Print the names of mismatched files
+    if mismatched_files:
+        print("Mismatches (PDFs without corresponding TXTs):")
+        for file in mismatched_files:
+            print(file)
+    else:
+        print("No mismatches found. All PDFs have corresponding TXTs.")
