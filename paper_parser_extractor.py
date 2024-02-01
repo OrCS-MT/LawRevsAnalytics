@@ -1689,3 +1689,57 @@ def gen_extract_text_from_pdf_with_timeout(pdf_dir=pdf_dir, pdf_to_txt_log_path=
             print(file)
     else:
         print("No mismatches found. All PDFs have corresponding TXTs.")
+
+
+#GEN Function - Create LRPaper Objects and Extract Core Attributes
+def gen_create_objs_refPDF_refulltext_extjournal(papers, pdf_dir=pdf_dir, fulltext_dir=fulltext_dir,
+                                                 LR_Name=LR_Name, txt_length_log_path=txt_length_log_path,
+                                                 valid_pdf_path_log_path=valid_pdf_path_log_path,
+                                                 critical_errors_log_path=critical_errors_log_path):
+    # Loop through every file in the directory
+    for filename in tqdm(os.listdir(fulltext_dir), desc="Processing Files", unit="file"):
+        try:
+            if filename.endswith(".txt"):
+                file_path = os.path.join(fulltext_dir, filename)
+                # Create a new LRPaper object, and assign the file path to the full_text attribute
+                new_paper = LRPaper()
+                new_paper.full_text = file_path
+                new_paper.filename = os.path.splitext(filename)[0]
+                pdf_filename = os.path.splitext(filename)[0] + ".pdf"
+                pdf_path = os.path.join(pdf_dir, pdf_filename)
+                if os.path.exists(pdf_path):
+                    new_paper.PDF = pdf_path
+                    new_paper.number_of_pages = get_num_of_pages(pdf_path)
+                else:
+                    print(f"ERROR: No file found at the PDF path:\n{pdf_path}")
+                    log_error(f"ERROR: No file found at the PDF path:{filename}\n\
+                    No PDF path was addedd; check manually if the path/file is valid.\n\n", valid_pdf_path_log_path)
+
+                new_paper.journal = LR_Name
+
+                # counting general number of words (including title page)
+                new_paper.length_original = count_words_in_file(new_paper.full_text, txt_length_log_path)
+                # subtracting the number of words from the title page from the
+                if (new_paper.number_of_pages is not None) and (new_paper.number_of_pages > 1):
+                    words_on_title_page = count_words_in_title_page(new_paper.PDF)
+                    new_paper.length_original = new_paper.length_original - words_on_title_page
+                    if (new_paper.length_original > 1):
+                        new_paper.general_length_problem_flag = False  # flagging there is NO problem with the length
+                    else:
+                        new_paper.general_length_problem_flag = True  # flagging there is a problem with the length
+
+                papers.append(new_paper)
+
+        except Exception as e:
+            print(f"CRITICAL ERROR: Could not create LRPaper object for {filename}.\n")
+            log_error(f"CRITICAL ERROR: Could not create LRPaper object for {filename}.\n\n", critical_errors_log_path)
+    # print_LRPapers_list(papers)
+    # Intentional delay
+    time.sleep(delay)
+
+    #Safety Check: No. of LRPapers in the papers list vs. No. of TXT files"""
+    num_of_TXTs = count_specific_files(fulltext_dir, '.txt')
+    print("Number of TXTs in the Fulltext folder: " + str(num_of_TXTs))
+    print("Number of LRPaper objects in current papers list: " + str(len(papers)))
+
+
