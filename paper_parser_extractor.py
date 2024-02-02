@@ -1743,3 +1743,21 @@ def gen_create_objs_refPDF_refulltext_extjournal(papers, pdf_dir=pdf_dir, fullte
     print("Number of LRPaper objects in current papers list: " + str(len(papers)))
 
 
+#GEN Function - Extract the citation line
+def gen_extract_citation_line(papers, cite_log_path=cite_log_path, fulltext_dir=fulltext_dir):
+    for paper in tqdm(papers, desc="Processing papers of the papers list",
+                      unit="paper"):  # Iterating over LRPaper objects
+        log_error(f"Trying to extract citation from object: {paper.full_text}\n", cite_log_path)
+        extract_citation_line(paper, cite_log_path)
+
+    # print_LRPapers_list(papers)
+    # Safety Check = no. of TXTs vs. no. of paper objects with legit cite_line
+    num_of_TXTs = count_specific_files(fulltext_dir, '.txt')
+    print("Number of TXTs in the Fulltext folder: " + str(num_of_TXTs))
+    num_of_valid_cite_line = 0
+    for paper in papers:
+        if paper.cite_line != "***NO CITATION PATTERN WAS FOUND***":
+            num_of_valid_cite_line += 1
+    print("Number of objects with a valid citation line: " + str(num_of_valid_cite_line))
+
+
