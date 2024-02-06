@@ -1803,3 +1803,26 @@ def gen_extract_doc_id_YVP_and_create_author_title_line(papers, position_checker
     print(len(papers))
 
 
+#GEN Function - Extract Authors / Titles
+def gen_extract_authors_and_title(papers, position_checker=1, extract_authors_and_title_log_path=extract_authors_and_title_log_path):
+    # Process each LRPaper object
+    for paper in tqdm(papers, desc="Processing papers of the papers list", unit="paper"):
+        try:
+            # Extract information and update object attributes
+            extract_authors_and_title(paper, extract_authors_and_title_log_path)
+            # Progress tracking
+            if position_checker % 100 == 0:
+                print(f"Processed {position_checker} papers so far.")
+            position_checker += 1
+
+        except Exception as e:
+            # Handle exceptions for each paper processing - only in case the very calling of function raised an issue
+            print(
+                f"ERROR: - {str(e)}\nA major error occurred while processing paper {paper.full_text} (doc_id: {paper.doc_id})")
+            print("Could not run the function 'extract_authors_and_title'\n\n")
+            log_error(
+                f"ERROR: {str(e)}\nA major error occurred while processing paper {paper.full_text} (doc_id: {paper.doc_id})\n\
+            Could not run the function 'extract_authors_and_title'\n\n", extract_authors_and_title_log_path)
+    # print_LRPapers_list(papers)
+
+
