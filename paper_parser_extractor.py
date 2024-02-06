@@ -1761,3 +1761,45 @@ def gen_extract_citation_line(papers, cite_log_path=cite_log_path, fulltext_dir=
     print("Number of objects with a valid citation line: " + str(num_of_valid_cite_line))
 
 
+#GEN Function - Extract DocID and YVP; Create author & title line
+def gen_extract_doc_id_YVP_and_create_author_title_line(papers, position_checker=1, UID_counter=10000,
+                                                        yearvolpage_log_path=yearvolpage_log_path,
+                                                        auth_title_text_log_path=auth_title_text_log_path):
+    # Process each LRPaper object
+    for paper in tqdm(papers, desc="Processing papers of the papers list", unit="paper"):
+        try:
+            # Extract information and update object attributes
+            extract_doc_id_YVP_from_cite_line(paper, LR_ID, UID_counter,
+                                              yearvolpage_log_path)  # assigns values to year, first_page, vol, vol_start_index, and doc_id
+
+            if paper.vol_start_index is None:
+                log_error(f"Skip Message: {paper.full_text} (doc_id: {paper.doc_id}) has no vol_start_index.\n\n",
+                          auth_title_text_log_path)
+                # print(f"Data extraction failed for paper {paper.full_text}, with doc_id: {paper.doc_id}\n")
+            else:  # i.e., vol_start_index is not None
+                create_author_title_line(paper, paper.vol_start_index, auth_title_text_log_path)
+
+            # Progress tracking
+            if position_checker % 100 == 0:
+                print(f"Processed {position_checker} papers so far.")
+
+            position_checker += 1
+            UID_counter += 1
+
+        except Exception as e:
+            # Handle exceptions for each paper processing - only in case the very calling of function raised an issue
+            print(
+                f"ERROR: {str(e)}\nAn error occurred while processing paper {paper.full_text} (doc_id: {paper.doc_id})")
+            print(
+                "Could not run the function 'extract_doc_id_YVP_from_cite_line' or the function 'create_author_title_line'\n\n")
+            log_error(
+                f"ERROR: {str(e)}\nAn error occurred while processing paper {paper.full_text} (doc_id: {paper.doc_id})\n\
+            Could not run the function 'extract_doc_id_YVP_from_cite_line' or the function 'create_author_title_line'\n\n",
+                auth_title_text_log_path)
+
+    # Intentional delay
+    time.sleep(delay)
+    # print_LRPapers_list(papers)
+    print(len(papers))
+
+
