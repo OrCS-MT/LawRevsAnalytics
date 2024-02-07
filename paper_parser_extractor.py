@@ -1826,3 +1826,37 @@ def gen_extract_authors_and_title(papers, position_checker=1, extract_authors_an
     # print_LRPapers_list(papers)
 
 
+#GEN Function - Partition and Generate Main/FNs Files
+def gen_fns_and_main_processing_with_timeout(papers, blindspot_area=0.33, zoom_factor=2, line_grayscale_threshold=128,
+                                             line_thickness_tolerance=20, minimal_length=150, timeout=90,
+                                             main_fns_texts_dir=main_fns_texts_dir,
+                                             main_fns_text_division_log_path=main_fns_text_division_log_path,
+                                             first_last_fns_log_path=first_last_fns_log_path):
+    for paper in tqdm(papers, desc="Processing papers of the papers list", unit="paper"):
+        try:
+            paper.main_text, paper.fns_text = fns_and_main_processing_with_timeout(paper, main_fns_texts_dir,
+                                                                                   main_fns_text_division_log_path,
+                                                                                   first_last_fns_log_path,
+                                                                                   blindspot_area, zoom_factor,
+                                                                                   line_grayscale_threshold,
+                                                                                   line_thickness_tolerance,
+                                                                                   minimal_length, timeout)
+            paper.main_text_length = count_words_in_file(paper.main_text, main_fns_text_division_log_path)
+            paper.fns_text_length = count_words_in_file(paper.fns_text, main_fns_text_division_log_path)
+        except Exception as e:
+            print(f" ERROR {str(e)}: Could not call the 'fns_and_main_processing' function for: {paper.full_text}\n\n")
+            log_error(
+                f" ERROR {str(e)}: Could not call the 'fns_and_main_processing' function for: {paper.full_text}\n\n",
+                main_fns_text_division_log_path)
+
+        # remove the LR name appearnces from the main_text file
+        try:
+            clear_journal_name(paper, main_fns_text_division_log_path)
+        except Exception as e:
+            print(f" ERROR {str(e)}: Could not call the function clear_journal_name for: {paper.full_text}\n\n")
+            log_error(f" ERROR {str(e)}: Could not call the function clear_journal_name for: {paper.full_text}\n\n",
+                      main_fns_text_division_log_path)
+    # print_LRPapers_list(papers)
+    # Intentional delay
+    time.sleep(delay)
+
