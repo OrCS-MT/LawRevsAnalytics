@@ -1860,3 +1860,21 @@ def gen_fns_and_main_processing_with_timeout(papers, blindspot_area=0.33, zoom_f
     # Intentional delay
     time.sleep(delay)
 
+
+
+#GEN Function - Remove Redundant Lines in Main Text
+def gen_remove_extra_lines_main(papers, main_reorg_log_path):
+    for paper in tqdm(papers, desc="Processing papers of the papers list - Removing Redundant Lines", unit = "paper"):
+        if paper.main_text is not None:
+            #print(f"Removing lines from item: {paper.doc_id}, path: {paper.full_text}")
+            original_length = paper.main_text_length
+            #print(f"Original length pre lines removal: {original_length}")
+
+            # removing redundant lines
+            for cycle in range(6):
+                remove_extra_lines_main(paper, original_length, main_reorg_log_path)
+                #print(f"Update length after REMOVING, version {cycle+1}: {count_words_in_file(paper.main_text, main_fns_text_division_log_path)}")
+                time.sleep(1)
+            paper.main_text_length = count_words_in_file(paper.main_text, main_reorg_log_path)
+            #print("Fiished with this paper.\n\n\n")
+
