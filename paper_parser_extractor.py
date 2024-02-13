@@ -1878,3 +1878,23 @@ def gen_remove_extra_lines_main(papers, main_reorg_log_path):
             paper.main_text_length = count_words_in_file(paper.main_text, main_reorg_log_path)
             #print("Fiished with this paper.\n\n\n")
 
+
+#GEN Function - Add Missing Linebreaks in Main Text
+def gen_add_missing_lines_main(papers, main_reorg_log_path):
+    abbrevs = {
+                "Mr.", "Mrs.", "Ms.", "Dr.", "Jr.", "Sr.", "Inc.", "St.", "Co.", "Ltd.", "Etc.", "etc.",
+                "Mt.", "Ft.", "vs.", "et al.", "i.e.", "Et al.", "E.g.", "E.G.", "e.g.", "U.S.",
+                "U.S.C.", "C.F.R.", "a.m.", "p.m.","A.M.","P.M."
+              }
+    for paper in tqdm(papers, desc="Processing papers of the papers list - Adding Missing Lines", unit = "paper"):
+        if paper.main_text is not None:
+            #print(f"Adding lines to item: {paper.doc_id}, path: {paper.full_text}")
+            original_length = paper.main_text_length
+            #print(f"Original length pre lines addition: {original_length}")
+
+            for cycle in range(3):
+                add_missing_lines_main(paper, original_length, abbrevs, main_reorg_log_path)
+                #print(f"Update length after ADDING, version {cycle+1}: {count_words_in_file(paper.main_text, main_fns_text_division_log_path)}")
+                time.sleep(1)
+            paper.main_text_length = count_words_in_file(paper.main_text, main_reorg_log_path)
+
