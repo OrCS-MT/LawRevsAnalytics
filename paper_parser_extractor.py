@@ -1898,3 +1898,13 @@ def gen_add_missing_lines_main(papers, main_reorg_log_path):
                 time.sleep(1)
             paper.main_text_length = count_words_in_file(paper.main_text, main_reorg_log_path)
 
+
+
+#GEN Function - First, Last, and Total FNs
+def gen_extract_first_last_total_fns(papers, first_last_fns_log_path):
+    for paper in tqdm(papers, desc="Processing papers of the papers list", unit="paper"):
+        try:
+            extract_first_last_total_fns(paper, first_last_fns_log_path)
+
+        except Exception as e:
+            log_error(f"ERROR with calling the function for {paper.full_text}.\n\n", first_last_fns_log_path)
