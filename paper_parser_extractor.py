@@ -1908,3 +1908,48 @@ def gen_extract_first_last_total_fns(papers, first_last_fns_log_path):
 
         except Exception as e:
             log_error(f"ERROR with calling the function for {paper.full_text}.\n\n", first_last_fns_log_path)
+
+
+#GEN Function - Text Length Safecheck & Assigning FNs-Words Ratio
+def gen_length_safety_check_and_setting_fns_words_ratio(papers, critical_errors_log_path):
+    tot_cnt = 0  # counter for total text extractions (not None in .main_text and .fns_text)
+    attention_cnt = 0  # counter for problematic text extractions
+    # saftey check for the removing/adding lines mechanism
+    for paper in tqdm(papers, desc="Processing papers of the papers list", unit="paper"):
+        if (paper.main_text is not None) and (paper.fns_text is not None):
+            tot_cnt += 1
+            paper.length_reorg = paper.main_text_length + paper.fns_text_length
+            # print(f"Original length pre lines addition: {original_length}")
+            if (paper.general_length_problem_flag == False):  # There is no previous problem with the length extraction
+                if (paper.length_reorg < paper.length_original * 0.9) or (
+                        paper.length_reorg > paper.length_original * 1.1):  # problem with length
+                    attention_cnt += 1
+                    paper.general_length_problem_flag = True  # Flagging a problem with the length extraction
+                    print(f"ATTENTION: The file {paper.full_text} has a length gap")
+                    print(f"Its original length was {paper.length_original}")
+                    print(f"but its ReOrg length is {paper.length_reorg} (more than a 10% gap).\n\n")
+                    log_error(
+                        f"ATTENTION: The file {paper.full_text} has a length gap:\nIts original length was {paper.length_original}\nbut its ReOrg length is {paper.length_reorg} (more than a 10% gap).\n\n",
+                        critical_errors_log_path)
+
+                else:  # length is okay
+                    if (paper.total_fns is not None) and (paper.main_text_length is not None) and (
+                            paper.main_text_length > 0):  # calculate FN-Word ration only if main_text_length and total_fns are valid
+                        FNs_cnt = paper.total_fns
+                        main_portion = (paper.main_text_length / paper.length_reorg)
+                        FNs_portion = (paper.fns_text_length / paper.length_reorg)
+                        main_cnt = paper.main_text_length
+                        paper.fns_words_ratio = (FNs_cnt / main_cnt) * 1000  # ratio of FNs per 1000 Words.
+                        paper.main_fns_portions = [main_portion,
+                                                   FNs_portion]  # percentages of the content (fns text [NOT number of fns] vs. main text)
+
+            else:  # previous problem with the length, since general_length_problem_flag is currently TRUE
+                print(f"ATTENTION: There is previous problem with the length extraction of file {paper.full_text}\n\n")
+                log_error(
+                    f"ATTENTION: There is previous problem with the length extraction of file {paper.full_text}\n\n",
+                    critical_errors_log_path)
+                attention_cnt += 1
+    print("Total papers with potential for Reorganization:", tot_cnt)
+    print("Papers with length problem after reorg for Reorganization:", attention_cnt)
+
+
