@@ -1953,3 +1953,28 @@ def gen_length_safety_check_and_setting_fns_words_ratio(papers, critical_errors_
     print("Papers with length problem after reorg for Reorganization:", attention_cnt)
 
 
+#GEN Function - Extracting Acknowledgment Part
+def gen_extract_acknowledgment_text(papers, extract_acknowledgment_text):
+    for paper in tqdm(papers, desc="Processing papers of the papers list", unit="paper"):
+        try:
+            extract_acknowledgment_text(paper, ACK_log_path)
+        except Exception as e:
+            print(f"ERROR with calling the function for {paper.full_text}.\n\n")
+            log_error(f"ERROR with calling the function for {paper.full_text}.\n\n", ACK_log_path)
+
+        # counting words in acknowledgment
+        if paper.acknowledgment is not None:
+            if (paper.acknowledgment == "No acknowledgment Text") or (not paper.acknowledgment):
+                paper.acknowledgment_length = 0
+            else:
+                try:
+                    ACK_text = paper.acknowledgment
+                    words = ACK_text.split()
+                    paper.acknowledgment_length = len(words)
+                except Exception as e:
+                    print(f"ERROR with counting ACK words for {paper.full_text}.\n\n")
+                    log_error(f"ERROR with counting ACK words for {paper.full_text}.\n\n", ACK_log_path)
+        else:  # acknowledgment is None
+            paper.acknowledgment_length = None
+
+
