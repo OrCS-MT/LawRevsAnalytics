@@ -1977,4 +1977,17 @@ def gen_extract_acknowledgment_text(papers, extract_acknowledgment_text):
         else:  # acknowledgment is None
             paper.acknowledgment_length = None
 
+#GEN Function - Extract Strat, Mid, and End from Main, and then Generate a Merged SME File
+def gen_split_to_S_M_E_and_join_into_SME(papers, SME_log_path):
+    for paper in tqdm(papers, desc="Processing papers of the papers list", unit="paper"):
+        try:
+            split_start_mid_end(paper, SME_log_path, SME_dir)
+            merge_SME(paper, SME_dir, SME_log_path)
+
+        except Exception as e:
+            print(f"ERROR: Could not call the SME division or SME merge function for {paper.full_text}.\n\n")
+            log_error(f"ERROR: Could not call the SME division or SME merge function for {paper.full_text}.\n\n",
+                      SME_log_path)
+
+
 
