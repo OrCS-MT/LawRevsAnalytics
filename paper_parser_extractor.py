@@ -1990,4 +1990,15 @@ def gen_split_to_S_M_E_and_join_into_SME(papers, SME_log_path):
                       SME_log_path)
 
 
+#GEN Function - Reorganize ACK Text
+def gen_reorganize_acknowledgment(papers, ACK_log_path):
+    for paper in tqdm(papers, desc="Processing papers of the papers list", unit="paper"):
+        try:
+            if (paper.acknowledgment is not None) and (paper.acknowledgment != "No acknowledgment Text"):
+                reorganize_acknowledgment(paper, ACK_log_path)
+        except Exception as e:
+            print(f"ERROR with calling the function for {paper.full_text}.\n\n")
+            log_error(f"ERROR with calling the function 'reorganize_acknowledgment' for {paper.full_text}.\n\n",
+                      ACK_log_path)
+
 
