@@ -2001,4 +2001,35 @@ def gen_reorganize_acknowledgment(papers, ACK_log_path):
             log_error(f"ERROR with calling the function 'reorganize_acknowledgment' for {paper.full_text}.\n\n",
                       ACK_log_path)
 
+#GEN Function - Length Safecheck for ACK Text
+def gen_safetycheck_for_reorg_ack_length(papers, critical_errors_log_path):
+    tot_cnt = 0  # counter for total text extractions (not None in .ack)
+    attention_cnt = 0  # counter for problematic text extractions
 
+    # saftey check for the reorg mechanism
+    for paper in tqdm(papers, desc="Processing papers of the papers list", unit="paper"):
+        if (paper.acknowledgment is not None) and (paper.acknowledgment_length is not None) and (
+                paper.reorg_acknowledgment_length is not None):
+            tot_cnt += 1
+            if (paper.general_length_problem_flag == False) and (
+                    paper.ACK_length_problem_flag == False):  # There is no previous problem with the length extraction
+                if (paper.reorg_acknowledgment_length < paper.acknowledgment_length * 0.5) or (
+                        paper.reorg_acknowledgment_length > paper.acknowledgment_length * 1.5):  # problem with length
+                    attention_cnt += 1
+                    paper.ACK_length_problem_flag = True  # Flagging a problem with the length extraction
+                    print(f"ATTENTION: The file {paper.full_text} has a length gap")
+                    print(f"Its original ACK length was {paper.acknowledgment_length}")
+                    print(f"but its ReOrg ACK length is {paper.reorg_acknowledgment_length} (more than a 50% gap).\n\n")
+                    log_error(
+                        f"ATTENTION: The file {paper.full_text} has a ACK length gap:\nIts original length was {paper.acknowledgment_length}\nbut its ReOrg length is {paper.reorg_acknowledgment_length} (more than a 50% gap).\n\n",
+                        critical_errors_log_path)
+
+            else:  # previous problem with the length, since general_length_problem_flag is currently TRUE
+                print(f"ATTENTION: There is previous problem with the length extraction of file {paper.full_text}\n\n")
+                log_error(
+                    f"ATTENTION: There is previous problem with the length extraction of file {paper.full_text}\n\n",
+                    critical_errors_log_path)
+                attention_cnt += 1
+
+    print("Total papers with potential for Reorganization of ACK:", tot_cnt)
+    print("Papers with length problem after ACK was reorganized:", attention_cnt)
