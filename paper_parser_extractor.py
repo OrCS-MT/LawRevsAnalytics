@@ -2033,3 +2033,19 @@ def gen_safetycheck_for_reorg_ack_length(papers, critical_errors_log_path):
 
     print("Total papers with potential for Reorganization of ACK:", tot_cnt)
     print("Papers with length problem after ACK was reorganized:", attention_cnt)
+
+
+# **MAIN**
+def main():
+    # Making sure directories exist (and create them if not)
+    directories = [pdf_dir, fulltext_dir, main_fns_texts_dir, SME_dir, XLSX_dir, logs_dir]
+    for directory in directories:
+        create_directory_if_not_exists(directory)
+
+    # Generating a crit errors log file
+    write_log_file("Logging Critical Errors...\n\n\n", critical_errors_log_path)
+    # Generating the log file #ProcessingLog, and documenting processing start point
+    write_log_file("Started extracting text from PDFs...\n\n\n", pdf_to_txt_log_path)
+    # Generating Text Files (PDF Extraction)
+    gen_extract_text_from_pdf_with_timeout()
+
