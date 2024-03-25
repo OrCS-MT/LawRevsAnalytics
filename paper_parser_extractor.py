@@ -2049,3 +2049,16 @@ def main():
     # Generating Text Files (PDF Extraction)
     gen_extract_text_from_pdf_with_timeout()
 
+    # **Initializing a LRPapers List**
+    # List to hold all LRPaper objects
+    papers = []
+
+    # **Create *LRPaper* Objects with refernce to the PDF files, fulltext txt files and the journal they were published in**
+    # Generating the log file #TXTLengthLog, and documenting processing start point
+    write_log_file("Started counting words in text files...\n\n\n", txt_length_log_path)
+    # Generating the log file for generating paths to original PDF files (only valid ones, as it trace back using the .txt files)
+    write_log_file("Started generating paths to PDF files...\n\n\n", valid_pdf_path_log_path)
+    # Creating objects with core attributes and appending to the papers list
+    gen_create_objs_refPDF_refulltext_extjournal(papers)
+
+
