@@ -2061,4 +2061,9 @@ def main():
     # Creating objects with core attributes and appending to the papers list
     gen_create_objs_refPDF_refulltext_extjournal(papers)
 
+    # **Extracting Citation Info*
+    # Generating start point in #CiteLog
+    write_log_file("Started extracting citations...\n\n\n", cite_log_path)
+    # Extract citation info from paper.full_text and assign it to paper.cite_line
+    gen_extract_citation_line(papers)
 
