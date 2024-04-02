@@ -2067,3 +2067,14 @@ def main():
     # Extract citation info from paper.full_text and assign it to paper.cite_line
     gen_extract_citation_line(papers)
 
+    # **Extracting doc_id, year, First Page, and volume + Storing authors & titles Line**
+    # Initializing Progress flag
+    position_checker = 1
+    # Unique ID counter
+    UID_counter = 10000
+    # Creating a log file for year, volume, first page extraction
+    write_log_file("Started YVP extraction...\n\n\n", yearvolpage_log_path)
+    # Creating a log authors_title_text extraction
+    write_log_file("Started generating authors_title_text...\n\n\n", auth_title_text_log_path)
+    gen_extract_doc_id_YVP_and_create_author_title_line(papers, position_checker, UID_counter)
+
