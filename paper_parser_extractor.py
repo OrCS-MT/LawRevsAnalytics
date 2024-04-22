@@ -2078,3 +2078,10 @@ def main():
     write_log_file("Started generating authors_title_text...\n\n\n", auth_title_text_log_path)
     gen_extract_doc_id_YVP_and_create_author_title_line(papers, position_checker, UID_counter)
 
+    # **Extracting authors and title**
+    # (Re-)Initializing Progress flag
+    position_checker = 1
+    # Creating a log file
+    write_log_file("Started generating authors attribute and title attribute...\n\n\n", extract_authors_and_title_log_path)
+    gen_extract_authors_and_title(papers, position_checker)
+
